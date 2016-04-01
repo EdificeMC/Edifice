@@ -6,6 +6,8 @@ import me.reherhold.edifice.Edifice;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.SimpleConfigurationNode;
 import ninja.leaping.configurate.json.JSONConfigurationLoader;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
@@ -85,24 +87,15 @@ public class SaveStructureExecutor implements CommandExecutor {
             int minZ = Math.min(loc1.getZ(), loc2.getZ());
             int maxZ = Math.max(loc1.getZ(), loc2.getZ());
 
-            // Writing out the JSON by hand because there are so many different
-            // types of data and properties that any single block can have, and
-            // it's
-            // very difficult to fit them all to a single POJO.
-            StringWriter writer = new StringWriter();
-            writer.append("{\"name\":\"");
-            writer.append(structureName);
-            writer.append("\", \"creatorUUID\":\"");
-            writer.append(player.getUniqueId().toString());
-            writer.append("\", \"originPosition\":{");
-            writer.append("\"X\":" + minX + ",");
-            writer.append("\"Y\":" + minY + ",");
-            writer.append("\"Z\":" + minZ);
-            writer.append("},\"blocks\":[");
+            JSONObject structure = new JSONObject()
+                    .put("name", structureName)
+                    .put("creatorUUID", player.getUniqueId().toString())
+                    .put("blocks", new JSONArray());
 
             for (int i = minX; i < maxX; i++) {
                 for (int j = minY; j < maxY; j++) {
                     for (int k = minZ; k < maxZ; k++) {
+                        StringWriter writer = new StringWriter();
                         BlockSnapshot block = world.createSnapshot(new Vector3i(i, j, k));
                         if (block.getState().getType() == BlockTypes.AIR) {
                             continue;
@@ -114,25 +107,17 @@ public class SaveStructureExecutor implements CommandExecutor {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        writer.append(',');
+                        JSONObject jsonBlock = new JSONObject(writer.toString());
+                        jsonBlock.remove("WorldUuid");
+                        jsonBlock.getJSONObject("Position").put("X", i - minX).put("Y", j - minY).put("Z", k - minZ);
+                        structure.getJSONArray("blocks").put(jsonBlock);
                     }
                 }
             }
 
-            // Much easier to just remove the last comma at the end rather than
-            // try
-            // to not include it in the first place due to air blocks being
-            // skipped
-            String structureJSON = writer.toString();
-            structureJSON = structureJSON.substring(0, structureJSON.length() - 2);
-            structureJSON += "]}";
-            
-            System.out.println(structureJSON);
-
             Client client = ClientBuilder.newClient();
             WebTarget target = client.target("http://localhost:3000/structures");
-            Response response = target.request().post(Entity.entity(structureJSON, MediaType.APPLICATION_JSON_TYPE));
-            System.out.println(response.getStatus());
+            Response response = target.request().post(Entity.entity(structure.toString(), MediaType.APPLICATION_JSON_TYPE));
         }
 
     }
