@@ -23,12 +23,12 @@ public class EdificeWandExecutor implements CommandExecutor {
             return CommandResult.empty();
         }
         Player player = (Player) source;
-        if (plugin.isWandActivated(player.getUniqueId())) {
+        if (this.plugin.isWandActivated(player.getUniqueId())) {
             player.sendMessage(Constants.STOPPED_MARKING_REGION);
-            plugin.getPlayerWandActivationStates().put(player.getUniqueId(), false);
+            this.plugin.getPlayerWandActivationStates().put(player.getUniqueId(), false);
         } else {
             player.sendMessage(Constants.CAN_MARK_REGION);
-            plugin.getPlayerWandActivationStates().put(player.getUniqueId(), true);
+            this.plugin.getPlayerWandActivationStates().put(player.getUniqueId(), true);
         }
 
         return CommandResult.success();

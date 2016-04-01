@@ -23,7 +23,7 @@ public class InteractBlockEventHandler {
 
     @Listener
     public void interactBlock(InteractBlockEvent event, @Root Player player) {
-        if (!plugin.isWandActivated(player.getUniqueId())) {
+        if (!this.plugin.isWandActivated(player.getUniqueId())) {
             return;
         }
 
@@ -33,17 +33,17 @@ public class InteractBlockEventHandler {
         }
         Location<World> loc = lOpt.get();
 
-        if (!plugin.getPlayerSelectedLocations().containsKey(player.getUniqueId())) {
-            plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(null, null));
+        if (!this.plugin.getPlayerSelectedLocations().containsKey(player.getUniqueId())) {
+            this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(null, null));
         }
 
         if (event instanceof InteractBlockEvent.Primary) {
-            Location<World> existingRight = plugin.getPlayerSelectedLocations().get(player.getUniqueId()).getRight();
-            plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(loc, existingRight));
+            Location<World> existingRight = this.plugin.getPlayerSelectedLocations().get(player.getUniqueId()).getRight();
+            this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(loc, existingRight));
             player.sendMessage(Text.of(Constants.SET_FIRST_LOC, loc));
         } else if (event instanceof InteractBlockEvent.Secondary) {
-            Location<World> existingLeft = plugin.getPlayerSelectedLocations().get(player.getUniqueId()).getLeft();
-            plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(existingLeft, loc));
+            Location<World> existingLeft = this.plugin.getPlayerSelectedLocations().get(player.getUniqueId()).getLeft();
+            this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(existingLeft, loc));
             player.sendMessage(Text.of(Constants.SET_SECOND_LOC, loc));
         }
     }

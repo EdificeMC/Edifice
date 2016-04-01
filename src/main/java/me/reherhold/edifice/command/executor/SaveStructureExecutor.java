@@ -18,10 +18,15 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.data.translator.ConfigurateTranslator;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.action.TextActions;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.UUID;
 
 import javax.ws.rs.client.Client;
@@ -47,18 +52,18 @@ public class SaveStructureExecutor implements CommandExecutor {
         Player player = (Player) source;
         UUID uuid = player.getUniqueId();
 
-        if (!plugin.getPlayerSelectedLocations().containsKey(uuid) || plugin.getPlayerSelectedLocations().get(uuid).getLeft() == null
-                || plugin.getPlayerSelectedLocations().get(uuid).getRight() == null) {
+        if (!this.plugin.getPlayerSelectedLocations().containsKey(uuid) || this.plugin.getPlayerSelectedLocations().get(uuid).getLeft() == null
+                || this.plugin.getPlayerSelectedLocations().get(uuid).getRight() == null) {
             source.sendMessage(Constants.SELECT_LOCATIONS_FIRST);
             return CommandResult.empty();
         }
 
-        World w = plugin.getPlayerSelectedLocations().get(uuid).getLeft().getExtent();
-        Vector3i loc1 = plugin.getPlayerSelectedLocations().get(uuid).getLeft().getBlockPosition();
-        Vector3i loc2 = plugin.getPlayerSelectedLocations().get(uuid).getRight().getBlockPosition();
+        World w = this.plugin.getPlayerSelectedLocations().get(uuid).getLeft().getExtent();
+        Vector3i loc1 = this.plugin.getPlayerSelectedLocations().get(uuid).getLeft().getBlockPosition();
+        Vector3i loc2 = this.plugin.getPlayerSelectedLocations().get(uuid).getRight().getBlockPosition();
 
         Sponge.getScheduler().createTaskBuilder().execute(new SaveStructureRunnable(player, (String) args.getOne("name").get(), w, loc1, loc2))
-                .async().name("Edifice - Submit Structure to REST API").submit(plugin);
+                .async().name("Edifice - Submit Structure to REST API").submit(this.plugin);
 
         return CommandResult.success();
     }
@@ -80,23 +85,28 @@ public class SaveStructureExecutor implements CommandExecutor {
         }
 
         public void run() {
-            int minX = Math.min(loc1.getX(), loc2.getX());
-            int maxX = Math.max(loc1.getX(), loc2.getX());
-            int minY = Math.min(loc1.getY(), loc2.getY());
-            int maxY = Math.max(loc1.getY(), loc2.getY());
-            int minZ = Math.min(loc1.getZ(), loc2.getZ());
-            int maxZ = Math.max(loc1.getZ(), loc2.getZ());
+            int minX = Math.min(this.loc1.getX(), this.loc2.getX());
+            int maxX = Math.max(this.loc1.getX(), this.loc2.getX());
+            int minY = Math.min(this.loc1.getY(), this.loc2.getY());
+            int maxY = Math.max(this.loc1.getY(), this.loc2.getY());
+            int minZ = Math.min(this.loc1.getZ(), this.loc2.getZ());
+            int maxZ = Math.max(this.loc1.getZ(), this.loc2.getZ());
 
             JSONObject structure = new JSONObject()
-                    .put("name", structureName)
-                    .put("creatorUUID", player.getUniqueId().toString())
+                    .put("name", this.structureName)
+                    .put("creatorUUID", this.player.getUniqueId().toString())
+                    .put("width", maxX - minX)
+                    .put("length", maxY - minY)
+                    .put("height", maxZ - minZ)
                     .put("blocks", new JSONArray());
+
+            player.sendMessage(Text.of(TextColors.GREEN, "Analyzing the structure..."));
 
             for (int i = minX; i < maxX; i++) {
                 for (int j = minY; j < maxY; j++) {
                     for (int k = minZ; k < maxZ; k++) {
                         StringWriter writer = new StringWriter();
-                        BlockSnapshot block = world.createSnapshot(new Vector3i(i, j, k));
+                        BlockSnapshot block = this.world.createSnapshot(new Vector3i(i, j, k));
                         if (block.getState().getType() == BlockTypes.AIR) {
                             continue;
                         }
@@ -115,10 +125,39 @@ public class SaveStructureExecutor implements CommandExecutor {
                 }
             }
 
-            Client client = ClientBuilder.newClient();
-            WebTarget target = client.target("http://localhost:3000/structures");
-            Response response = target.request().post(Entity.entity(structure.toString(), MediaType.APPLICATION_JSON_TYPE));
-        }
+            player.sendMessage(Text.of(TextColors.GREEN, "Uploading the structure..."));
 
+            Client client = ClientBuilder.newClient();
+            WebTarget target = client.target(SaveStructureExecutor.this.plugin.getConfig().getRestURI().toString() + "/structures");
+            Response response;
+            try {
+                response = target.request().post(Entity.entity(structure.toString(), MediaType.APPLICATION_JSON_TYPE));
+            } catch (Exception e) {
+                this.player.sendMessage(Text.of(TextColors.RED,
+                        "There was an error uploading your structure."));
+                return;
+            }
+
+            if (response.getStatus() == 201) {
+                JSONObject responseBody = new JSONObject(response.readEntity(String.class));
+                String structureID = responseBody.getString("_id");
+                this.player.sendMessage(Text.of(TextColors.GREEN, "You have successfully uploaded ", TextColors.GOLD, this.structureName,
+                        TextColors.GREEN,
+                        "."));
+                try {
+                    URL structureWebURL =
+                            new URL(SaveStructureExecutor.this.plugin.getConfig().getWebURI().toString() + "/structures/" + structureID);
+                    this.player.sendMessage(Text.of(TextColors.GREEN, "Click ",
+                            Text.builder("here").color(TextColors.GOLD).onClick(TextActions.openUrl(structureWebURL)).build(), TextColors.GREEN,
+                            " to see it."));
+
+                } catch (MalformedURLException e) {
+                }
+            } else {
+                this.player.sendMessage(Text.of(TextColors.RED,
+                        "There was an error uploading your structure. Received status code " + response.getStatus() + " and response body "
+                                + response.getEntity()));
+            }
+        }
     }
 }
