@@ -1,11 +1,15 @@
 package me.reherhold.edifice;
 
-import me.reherhold.edifice.command.executor.GiveBluePrintExecutor;
+import me.reherhold.edifice.data.blueprint.BlueprintDataManipulatorBuilder;
 
 import com.google.inject.Inject;
 import me.reherhold.edifice.command.executor.EdificeWandExecutor;
+import me.reherhold.edifice.command.executor.GiveBluePrintExecutor;
 import me.reherhold.edifice.command.executor.SaveStructureExecutor;
+import me.reherhold.edifice.data.blueprint.BlueprintData;
+import me.reherhold.edifice.data.blueprint.ImmutableBlueprintData;
 import me.reherhold.edifice.eventhandler.InteractBlockEventHandler;
+import me.reherhold.edifice.eventhandler.InteractEntityEventHandler;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
@@ -45,10 +49,17 @@ public class Edifice {
     public void preInit(GamePreInitializationEvent event) {
         this.playerWandActivationStates = new HashMap<UUID, Boolean>();
         this.playerSelectedLocations = new HashMap<UUID, Pair<Location<World>, Location<World>>>();
-        // Watch for players right-clicking blocks
-        Sponge.getEventManager().registerListeners(this, new InteractBlockEventHandler(this));
+        registerEventListeners();
         registerCommands();
         setupConfig();
+        registerData();
+    }
+
+    private void registerEventListeners() {
+        // Watch for players left/right-clicking blocks
+        Sponge.getEventManager().registerListeners(this, new InteractBlockEventHandler(this));
+        // Watch for players putting blueprints in item frames
+        Sponge.getEventManager().registerListeners(this, new InteractEntityEventHandler(this));
     }
 
     private void registerCommands() {
@@ -65,7 +76,7 @@ public class Edifice {
                         .arguments(GenericArguments.string(Text.of("name")))
                         .build();
         subCommands.put(Arrays.asList("save"), saveStructureSpec);
-        
+
         CommandSpec createStructureSpec =
                 CommandSpec.builder().description(Text.of("Starts the process of creating a structure")).executor(new GiveBluePrintExecutor(this))
                         .arguments(GenericArguments.string(Text.of("id")))
@@ -138,6 +149,10 @@ public class Edifice {
         } catch (IOException exception) {
             this.logger.warn("The default configuration could not be created!");
         }
+    }
+    
+    private void registerData() {
+        Sponge.getDataManager().register(BlueprintData.class, ImmutableBlueprintData.class, new BlueprintDataManipulatorBuilder());
     }
 
     public EdificeConfiguration getConfig() {

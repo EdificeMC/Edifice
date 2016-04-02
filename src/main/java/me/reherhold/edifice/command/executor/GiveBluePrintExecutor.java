@@ -1,5 +1,9 @@
 package me.reherhold.edifice.command.executor;
 
+import me.reherhold.edifice.data.blueprint.BlueprintData;
+
+import me.reherhold.edifice.data.EdificeKeys;
+
 import java.util.Arrays;
 
 import org.spongepowered.api.data.key.Keys;
@@ -68,6 +72,7 @@ public class GiveBluePrintExecutor implements CommandExecutor {
             ItemStack.Builder builder = Sponge.getRegistry().createBuilder(ItemStack.Builder.class);
             ItemStack blueprint = builder.itemType(ItemTypes.PAPER)
                     .quantity(1)
+                    .itemData(new BlueprintData(structure.toString()))
                     .add(Keys.DISPLAY_NAME, Text.of(TextColors.GOLD, structure.getString("name"), TextColors.GREEN, " Blueprint"))
                     .add(Keys.ITEM_LORE,
                             Arrays.asList(
