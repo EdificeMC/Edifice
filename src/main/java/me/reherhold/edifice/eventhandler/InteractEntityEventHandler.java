@@ -1,5 +1,9 @@
 package me.reherhold.edifice.eventhandler;
 
+import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
+import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
+import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
+
 import com.flowpowered.math.vector.Vector3i;
 import me.reherhold.edifice.Edifice;
 import me.reherhold.edifice.data.EdificeKeys;
@@ -59,9 +63,9 @@ public class InteractEntityEventHandler {
             return;
         }
         JSONObject structure = new JSONObject(blueprintDataOpt.get());
-        int width = structure.getInt("width");
-        int length = structure.getInt("length");
-        int height = structure.getInt("height");
+        int width = structure.getInt(WIDTH);
+        int length = structure.getInt(LENGTH);
+        int height = structure.getInt(HEIGHT);
         Location<World> itemFrameLoc = itemFrame.getLocation();
         Direction direction = itemFrame.direction().get();
         // Vector offset to be added to the item frame location to result in the

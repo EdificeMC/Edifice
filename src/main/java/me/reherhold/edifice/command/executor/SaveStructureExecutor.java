@@ -1,5 +1,18 @@
 package me.reherhold.edifice.command.executor;
 
+import static me.reherhold.edifice.StructureJSONKeys.BLOCKS;
+import static me.reherhold.edifice.StructureJSONKeys.CREATOR_UUID;
+import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
+import static me.reherhold.edifice.StructureJSONKeys.ID;
+import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
+import static me.reherhold.edifice.StructureJSONKeys.NAME;
+import static me.reherhold.edifice.StructureJSONKeys.POSITION;
+import static me.reherhold.edifice.StructureJSONKeys.POSITION_X;
+import static me.reherhold.edifice.StructureJSONKeys.POSITION_Y;
+import static me.reherhold.edifice.StructureJSONKeys.POSITION_Z;
+import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
+import static me.reherhold.edifice.StructureJSONKeys.WORLD_UUID;
+
 import com.flowpowered.math.vector.Vector3i;
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
@@ -93,12 +106,12 @@ public class SaveStructureExecutor implements CommandExecutor {
             int maxZ = Math.max(this.loc1.getZ(), this.loc2.getZ());
 
             JSONObject structure = new JSONObject()
-                    .put("name", this.structureName)
-                    .put("creatorUUID", this.player.getUniqueId().toString())
-                    .put("width", maxX - minX)
-                    .put("length", maxY - minY)
-                    .put("height", maxZ - minZ)
-                    .put("blocks", new JSONArray());
+                    .put(NAME, this.structureName)
+                    .put(CREATOR_UUID, this.player.getUniqueId().toString())
+                    .put(WIDTH, maxX - minX)
+                    .put(LENGTH, maxY - minY)
+                    .put(HEIGHT, maxZ - minZ)
+                    .put(BLOCKS, new JSONArray());
 
             player.sendMessage(Text.of(TextColors.GREEN, "Analyzing the structure..."));
 
@@ -118,9 +131,10 @@ public class SaveStructureExecutor implements CommandExecutor {
                             e.printStackTrace();
                         }
                         JSONObject jsonBlock = new JSONObject(writer.toString());
-                        jsonBlock.remove("WorldUuid");
-                        jsonBlock.getJSONObject("Position").put("X", i - minX).put("Y", j - minY).put("Z", k - minZ);
-                        structure.getJSONArray("blocks").put(jsonBlock);
+                        jsonBlock.remove(WORLD_UUID);
+                        jsonBlock.getJSONObject(POSITION).put(POSITION_X, i - minX)
+                                .put(POSITION_Y, j - minY).put(POSITION_Z, k - minZ);
+                        structure.getJSONArray(BLOCKS).put(jsonBlock);
                     }
                 }
             }
@@ -140,7 +154,7 @@ public class SaveStructureExecutor implements CommandExecutor {
 
             if (response.getStatus() == 201) {
                 JSONObject responseBody = new JSONObject(response.readEntity(String.class));
-                String structureID = responseBody.getString("_id");
+                String structureID = responseBody.getString(ID);
                 this.player.sendMessage(Text.of(TextColors.GREEN, "You have successfully uploaded ", TextColors.GOLD, this.structureName,
                         TextColors.GREEN,
                         "."));

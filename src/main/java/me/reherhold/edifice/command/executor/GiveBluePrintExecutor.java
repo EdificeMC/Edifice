@@ -1,16 +1,12 @@
 package me.reherhold.edifice.command.executor;
 
-import me.reherhold.edifice.data.blueprint.BlueprintData;
-
-import me.reherhold.edifice.data.EdificeKeys;
-
-import java.util.Arrays;
-
-import org.spongepowered.api.data.key.Keys;
-import org.spongepowered.api.item.ItemTypes;
-import org.spongepowered.api.item.inventory.ItemStack;
+import static me.reherhold.edifice.StructureJSONKeys.NAME;
+import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
+import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
+import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
+import me.reherhold.edifice.data.blueprint.BlueprintData;
 import org.json.JSONObject;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -18,9 +14,14 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+
+import java.util.Arrays;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -73,13 +74,13 @@ public class GiveBluePrintExecutor implements CommandExecutor {
             ItemStack blueprint = builder.itemType(ItemTypes.PAPER)
                     .quantity(1)
                     .itemData(new BlueprintData(structure.toString()))
-                    .add(Keys.DISPLAY_NAME, Text.of(TextColors.GOLD, structure.getString("name"), TextColors.GREEN, " Blueprint"))
+                    .add(Keys.DISPLAY_NAME, Text.of(TextColors.GOLD, structure.getString(NAME), TextColors.GREEN, " Blueprint"))
                     .add(Keys.ITEM_LORE,
                             Arrays.asList(
                                     Text.of(TextColors.GREEN, "To activate, place in an item frame in front"),
-                                    Text.of(TextColors.GREEN, "in front of a cleared ", TextColors.GOLD, structure.getInt("width"), TextColors.GREEN,
-                                            " x ", TextColors.GOLD, structure.getInt("length"), TextColors.GREEN, " x ", TextColors.GOLD,
-                                            structure.getInt("height"), TextColors.GREEN, " area.")))
+                                    Text.of(TextColors.GREEN, "in front of a cleared ", TextColors.GOLD, structure.getInt(WIDTH), TextColors.GREEN,
+                                            " x ", TextColors.GOLD, structure.getInt(LENGTH), TextColors.GREEN, " x ", TextColors.GOLD,
+                                            structure.getInt(HEIGHT), TextColors.GREEN, " area.")))
                     .build();
             player.getInventory().offer(blueprint);
 
