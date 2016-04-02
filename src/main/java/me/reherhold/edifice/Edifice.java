@@ -1,12 +1,11 @@
 package me.reherhold.edifice;
 
-import me.reherhold.edifice.data.blueprint.BlueprintDataManipulatorBuilder;
-
 import com.google.inject.Inject;
 import me.reherhold.edifice.command.executor.EdificeWandExecutor;
 import me.reherhold.edifice.command.executor.GiveBluePrintExecutor;
 import me.reherhold.edifice.command.executor.SaveStructureExecutor;
 import me.reherhold.edifice.data.blueprint.BlueprintData;
+import me.reherhold.edifice.data.blueprint.BlueprintDataManipulatorBuilder;
 import me.reherhold.edifice.data.blueprint.ImmutableBlueprintData;
 import me.reherhold.edifice.eventhandler.InteractBlockEventHandler;
 import me.reherhold.edifice.eventhandler.InteractEntityEventHandler;
@@ -26,7 +25,6 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-import org.spongepowered.api.world.extent.StorageType;
 
 import java.io.File;
 import java.io.IOException;
@@ -106,18 +104,6 @@ public class Edifice {
             this.config = EdificeConfiguration.MAPPER.bindToNew().populate(rawConfig);
         } catch (IOException e) {
             this.logger.warn("The configuration could not be loaded! Using the default configuration");
-        } catch (IllegalArgumentException e) {
-            // Everything after this is only for stringifying the array of all
-            // StorageType values
-            StringBuilder sb = new StringBuilder();
-            StorageType[] storageTypes = StorageType.values();
-            for (int i = 0; i < storageTypes.length; i++) {
-                sb.append(storageTypes[i].toString());
-                if (i + 1 != storageTypes.length) {
-                    sb.append(", ");
-                }
-            }
-            this.logger.warn("The specified storage type could not be found. Reverting to flatfile storage. Try: " + sb.toString());
         } catch (ObjectMappingException e) {
             this.logger.warn("There was an error loading the configuration." + e.getStackTrace());
         }
@@ -150,7 +136,7 @@ public class Edifice {
             this.logger.warn("The default configuration could not be created!");
         }
     }
-    
+
     private void registerData() {
         Sponge.getDataManager().register(BlueprintData.class, ImmutableBlueprintData.class, new BlueprintDataManipulatorBuilder());
     }
