@@ -108,16 +108,16 @@ public class SaveStructureExecutor implements CommandExecutor {
             JSONObject structure = new JSONObject()
                     .put(NAME, this.structureName)
                     .put(CREATOR_UUID, this.player.getUniqueId().toString())
-                    .put(WIDTH, maxX - minX)
-                    .put(LENGTH, maxY - minY)
-                    .put(HEIGHT, maxZ - minZ)
+                    .put(WIDTH, maxX - minX + 1)
+                    .put(LENGTH, maxZ - minZ + 1)
+                    .put(HEIGHT, maxY - minY + 1)
                     .put(BLOCKS, new JSONArray());
 
             player.sendMessage(Text.of(TextColors.GREEN, "Analyzing the structure..."));
 
-            for (int i = minX; i < maxX; i++) {
-                for (int j = minY; j < maxY; j++) {
-                    for (int k = minZ; k < maxZ; k++) {
+            for (int i = minX; i <= maxX; i++) {
+                for (int j = minY; j <= maxY; j++) {
+                    for (int k = minZ; k <= maxZ; k++) {
                         StringWriter writer = new StringWriter();
                         BlockSnapshot block = this.world.createSnapshot(new Vector3i(i, j, k));
                         if (block.getState().getType() == BlockTypes.AIR) {
