@@ -7,6 +7,10 @@ import me.reherhold.edifice.command.executor.SaveStructureExecutor;
 import me.reherhold.edifice.data.blueprint.BlueprintData;
 import me.reherhold.edifice.data.blueprint.BlueprintDataManipulatorBuilder;
 import me.reherhold.edifice.data.blueprint.ImmutableBlueprintData;
+import me.reherhold.edifice.data.structure.ImmutableStructureData;
+import me.reherhold.edifice.data.structure.StructureBuilder;
+import me.reherhold.edifice.data.structure.StructureData;
+import me.reherhold.edifice.data.structure.StructureDataManipulatorBuilder;
 import me.reherhold.edifice.eventhandler.InteractBlockEventHandler;
 import me.reherhold.edifice.eventhandler.InteractEntityEventHandler;
 import ninja.leaping.configurate.ConfigurationNode;
@@ -139,10 +143,16 @@ public class Edifice {
 
     private void registerData() {
         Sponge.getDataManager().register(BlueprintData.class, ImmutableBlueprintData.class, new BlueprintDataManipulatorBuilder());
+        Sponge.getDataManager().register(StructureData.class, ImmutableStructureData.class, new StructureDataManipulatorBuilder());
+        Sponge.getDataManager().registerBuilder(Structure.class, new StructureBuilder());
     }
 
     public EdificeConfiguration getConfig() {
         return this.config;
+    }
+
+    public Logger getLogger() {
+        return this.logger;
     }
 
     public HashMap<UUID, Boolean> getPlayerWandActivationStates() {
