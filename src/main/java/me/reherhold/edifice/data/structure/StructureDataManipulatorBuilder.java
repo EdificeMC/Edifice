@@ -1,14 +1,14 @@
 package me.reherhold.edifice.data.structure;
 
-import jersey.repackaged.com.google.common.collect.Lists;
-
 import static me.reherhold.edifice.data.EdificeKeys.STRUCTURE;
+
 import me.reherhold.edifice.Structure;
 import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.DataView;
 import org.spongepowered.api.data.manipulator.DataManipulatorBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
 
+import java.util.HashMap;
 import java.util.Optional;
 
 public class StructureDataManipulatorBuilder implements DataManipulatorBuilder<StructureData, ImmutableStructureData> {
@@ -24,7 +24,7 @@ public class StructureDataManipulatorBuilder implements DataManipulatorBuilder<S
 
     @Override
     public StructureData create() {
-        return new StructureData(new Structure("", Lists.newArrayList()));
+        return new StructureData(new Structure("", new HashMap<>()));
     }
 
     @Override

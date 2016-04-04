@@ -7,13 +7,14 @@ import org.spongepowered.api.data.DataSerializable;
 import org.spongepowered.api.data.MemoryDataContainer;
 
 import java.util.List;
+import java.util.Map;
 
 public class Structure implements DataSerializable {
 
     private String name;
-    List<BlockSnapshot> remainingBlocks;
+    Map<String, List<BlockSnapshot>> remainingBlocks;
     
-    public Structure(String name, List<BlockSnapshot> remainingBlocks) {
+    public Structure(String name, Map<String, List<BlockSnapshot>> remainingBlocks) {
         this.name = name;
         this.remainingBlocks = remainingBlocks;
     } 
@@ -22,7 +23,7 @@ public class Structure implements DataSerializable {
         return name;
     }
 
-    public List<BlockSnapshot> getRemainingBlocks() {
+    public Map<String, List<BlockSnapshot>> getRemainingBlocks() {
         return remainingBlocks;
     }
 

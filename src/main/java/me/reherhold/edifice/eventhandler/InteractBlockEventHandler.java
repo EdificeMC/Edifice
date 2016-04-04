@@ -2,15 +2,24 @@ package me.reherhold.edifice.eventhandler;
 
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
+import me.reherhold.edifice.Structure;
+import me.reherhold.edifice.data.EdificeKeys;
 import org.apache.commons.lang3.tuple.MutablePair;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.filter.cause.Root;
+import org.spongepowered.api.service.pagination.PaginationList;
+import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 public class InteractBlockEventHandler {
@@ -23,15 +32,19 @@ public class InteractBlockEventHandler {
 
     @Listener
     public void interactBlock(InteractBlockEvent event, @Root Player player) {
-        if (!this.plugin.isWandActivated(player.getUniqueId())) {
-            return;
-        }
-
         Optional<Location<World>> lOpt = event.getTargetBlock().getLocation();
         if (!lOpt.isPresent()) {
             return;
         }
         Location<World> loc = lOpt.get();
+
+        if (event instanceof InteractBlockEvent.Secondary && loc.get(EdificeKeys.STRUCTURE).isPresent()) {
+            handleStructureInfo((InteractBlockEvent.Secondary) event, player, loc);
+            return;
+        }
+        if (!this.plugin.isWandActivated(player.getUniqueId())) {
+            return;
+        }
 
         if (!this.plugin.getPlayerSelectedLocations().containsKey(player.getUniqueId())) {
             this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(null, null));
@@ -46,5 +59,21 @@ public class InteractBlockEventHandler {
             this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(existingLeft, loc));
             player.sendMessage(Text.of(Constants.SET_SECOND_LOC, loc));
         }
+    }
+
+    private void handleStructureInfo(InteractBlockEvent.Secondary event, Player player, Location<World> location) {
+        Structure structure = location.get(EdificeKeys.STRUCTURE).get();
+        List<Text> materialsNeeded = new ArrayList<Text>();
+        Iterator<String> materialIterator = structure.getRemainingBlocks().keySet().iterator();
+        while (materialIterator.hasNext()) {
+            String material = materialIterator.next();
+            materialsNeeded.add(Text.of(TextColors.GREEN, structure.getRemainingBlocks().get(material).size(), " ", TextColors.GOLD, material));
+        }
+
+        PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
+        PaginationList.Builder builder = paginationService.builder();
+        builder.title(Text.of("Constructing ", TextColors.GOLD, structure.getName())).contents(materialsNeeded)
+                .header(Text.of(TextColors.GREEN, "Materials needed to complete")).sendTo(player);
+        event.setCancelled(true);
     }
 }

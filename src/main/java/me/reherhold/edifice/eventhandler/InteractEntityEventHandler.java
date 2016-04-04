@@ -1,7 +1,5 @@
 package me.reherhold.edifice.eventhandler;
 
-import com.google.common.collect.Lists;
-
 import static me.reherhold.edifice.StructureJSONKeys.BLOCKS;
 import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
 import static me.reherhold.edifice.StructureJSONKeys.ID;
@@ -13,6 +11,7 @@ import static me.reherhold.edifice.StructureJSONKeys.POSITION_Y;
 import static me.reherhold.edifice.StructureJSONKeys.POSITION_Z;
 import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
 import static me.reherhold.edifice.StructureJSONKeys.WORLD_UUID;
+
 import com.flowpowered.math.vector.Vector3i;
 import me.reherhold.edifice.Edifice;
 import me.reherhold.edifice.Structure;
@@ -27,6 +26,7 @@ import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.DataTransactionResult;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.property.block.HeldItemProperty;
 import org.spongepowered.api.data.translator.ConfigurateTranslator;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.hanging.ItemFrame;
@@ -47,8 +47,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+
+
 
 public class InteractEntityEventHandler {
 
@@ -135,6 +139,7 @@ public class InteractEntityEventHandler {
         
         if(structureBlock.get(EdificeKeys.STRUCTURE).isPresent()) {
             player.sendMessage(Text.of(TextColors.RED, "There is already a structure in progress here!"));
+            event.setCancelled(true);
             return;
         }
 
@@ -143,19 +148,19 @@ public class InteractEntityEventHandler {
 
         // TODO check if the area is clear based on config value
 
-        List<BlockSnapshot> deserializedStructureBlocks = new ArrayList<BlockSnapshot>();
+        Map<String, List<BlockSnapshot>> deserializedStructureBlocks = new HashMap<String, List<BlockSnapshot>>();
         // Take all of the blocks and add the origin location to restore their
         // locations and world UUID
         structureJson.getJSONArray(BLOCKS).forEach((obj) -> {
-            JSONObject block = (JSONObject) obj;
-            JSONObject pos = block.getJSONObject(POSITION);
+            JSONObject blockJson = (JSONObject) obj;
+            JSONObject pos = blockJson.getJSONObject(POSITION);
             pos.put(POSITION_X, pos.getInt(POSITION_X) + originLocation.getX());
             pos.put(POSITION_Y, pos.getInt(POSITION_Y) + originLocation.getY());
             pos.put(POSITION_Z, pos.getInt(POSITION_Z) + originLocation.getZ());
-            block.put(WORLD_UUID, itemFrameLoc.getExtent().getUniqueId().toString());
+            blockJson.put(WORLD_UUID, itemFrameLoc.getExtent().getUniqueId().toString());
 
             // Deserialize the JSON block into a BlockSnapshot
-                BufferedReader reader = new BufferedReader(new StringReader(block.toString()));
+                BufferedReader reader = new BufferedReader(new StringReader(blockJson.toString()));
                 JSONConfigurationLoader loader = JSONConfigurationLoader.builder().setSource(() -> {
                     return reader;
                 }).build();
@@ -173,7 +178,17 @@ public class InteractEntityEventHandler {
                     player.sendMessage(Text.of(TextColors.RED, "There was an error deserializing the structure. Cannot continue"));
                     return;
                 }
-//                deserializedStructureBlocks.add(blockSnapOpt.get());
+                BlockSnapshot block = blockSnapOpt.get();
+                // Replace the dots with dashes because the dots are interpreted as a different path when they are serialized
+                // by the Data API
+                String itemName = block.getProperty(HeldItemProperty.class).get().getValue().getTranslation().get().replace('.', '-');
+                if(deserializedStructureBlocks.containsKey(itemName)) {
+                    deserializedStructureBlocks.get(itemName).add(block);
+                } else {
+                    ArrayList<BlockSnapshot> newList = new ArrayList<BlockSnapshot>();
+                    newList.add(block);
+                    deserializedStructureBlocks.put(itemName, newList);
+                }
             });
         Structure structure = new Structure(structureJson.getString(NAME), deserializedStructureBlocks);
 
@@ -190,7 +205,7 @@ public class InteractEntityEventHandler {
         player.sendMessage(Text.of(TextColors.GREEN, "You have started the construction of ", TextColors.GOLD, structure.getName(), TextColors.GREEN,
                 "."));
         player.sendMessage(Text.of(TextColors.GREEN,
-                "You can right click the crafting table to see your progress. To begin, throw the necessary materials near the crafting table."));
+                "You can right click the chest to see your progress. To begin, throw the necessary materials near the chest."));
 
         new Location<World>(itemFrameLoc.getExtent(), originLocation).setBlockType(BlockTypes.GOLD_BLOCK);
         new Location<World>(itemFrameLoc.getExtent(), endLocation).setBlockType(BlockTypes.DIAMOND_BLOCK);

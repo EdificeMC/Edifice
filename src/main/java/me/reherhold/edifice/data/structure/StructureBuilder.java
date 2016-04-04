@@ -3,13 +3,15 @@ package me.reherhold.edifice.data.structure;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.BLOCKS;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.NAME;
 
-import com.google.common.collect.Lists;
 import me.reherhold.edifice.Structure;
 import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.DataView;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 public class StructureBuilder extends AbstractDataBuilder<Structure> {
@@ -21,9 +23,13 @@ public class StructureBuilder extends AbstractDataBuilder<Structure> {
     @Override
     protected Optional<Structure> buildContent(DataView container) throws InvalidDataException {
         if (container.contains(NAME, BLOCKS)) {
+            HashMap<String, List<BlockSnapshot>> blockMap = new HashMap<>();
+            DataView blockMapView = container.getView(BLOCKS).get();
+            for (DataQuery key : blockMapView.getKeys(false)) {
+                blockMap.put(key.toString(), blockMapView.getSerializableList(key, BlockSnapshot.class).get());
+            }
             Structure structure =
-                    new Structure(container.getString(NAME).get(), container.getSerializableList(BLOCKS, BlockSnapshot.class).orElse(
-                            Lists.newArrayList()));
+                    new Structure(container.getString(NAME).get(), blockMap);
             return Optional.of(structure);
         }
         return Optional.empty();
