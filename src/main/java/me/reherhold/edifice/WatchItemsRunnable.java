@@ -40,8 +40,8 @@ public class WatchItemsRunnable implements Runnable {
                 // with StructureData
                 Vector3i itemBlockPos = item.getLocation().getBlockPosition();
                 for (int x = itemBlockPos.getX() - SEARCH_RADIUS; x <= itemBlockPos.getX() + SEARCH_RADIUS; x++) {
-                    for (int y = itemBlockPos.getY() - SEARCH_RADIUS; x <= itemBlockPos.getY() + SEARCH_RADIUS; y++) {
-                        for (int z = itemBlockPos.getZ() - SEARCH_RADIUS; x <= itemBlockPos.getZ() + SEARCH_RADIUS; z++) {
+                    for (int y = itemBlockPos.getY() - SEARCH_RADIUS; y <= itemBlockPos.getY() + SEARCH_RADIUS; y++) {
+                        for (int z = itemBlockPos.getZ() - SEARCH_RADIUS; z <= itemBlockPos.getZ() + SEARCH_RADIUS; z++) {
                             Location<World> loc = new Location<World>(item.getLocation().getExtent(), x, y, z);
                             if (!loc.get(EdificeKeys.STRUCTURE).isPresent()) {
                                 continue;
