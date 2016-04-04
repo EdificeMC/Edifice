@@ -55,6 +55,7 @@ public class Edifice {
         registerCommands();
         setupConfig();
         registerData();
+        startItemEntityListener();
     }
 
     private void registerEventListeners() {
@@ -145,6 +146,16 @@ public class Edifice {
         Sponge.getDataManager().register(BlueprintData.class, ImmutableBlueprintData.class, new BlueprintDataManipulatorBuilder());
         Sponge.getDataManager().register(StructureData.class, ImmutableStructureData.class, new StructureDataManipulatorBuilder());
         Sponge.getDataManager().registerBuilder(Structure.class, new StructureBuilder());
+    }
+
+    // I really dislike checking every few ticks for items on the ground, but
+    // with no events implemented for Players throwing items or implementation
+    // for checking Chest inventories, this is what I have to do until they are
+    // implemented
+    private void startItemEntityListener() {
+        Sponge.getScheduler().createTaskBuilder().intervalTicks(10)
+                .name("Edifice - Check for items on the ground to be used in the construction of a structure").execute(new WatchItemsRunnable())
+                .submit(this);
     }
 
     public EdificeConfiguration getConfig() {
