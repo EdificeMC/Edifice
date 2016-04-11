@@ -15,5 +15,6 @@ public class StructureJSONKeys {
     public static final String POSITION_Y = "Y";
     public static final String POSITION_Z = "Z";
     public static final String BLOCKS = "blocks";
+    public static final String DIRECTION = "direction";
 
 }

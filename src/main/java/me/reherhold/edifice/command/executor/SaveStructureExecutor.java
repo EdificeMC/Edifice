@@ -1,7 +1,10 @@
 package me.reherhold.edifice.command.executor;
 
+import com.flowpowered.math.vector.Vector3d;
+
 import static me.reherhold.edifice.StructureJSONKeys.BLOCKS;
 import static me.reherhold.edifice.StructureJSONKeys.CREATOR_UUID;
+import static me.reherhold.edifice.StructureJSONKeys.DIRECTION;
 import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
 import static me.reherhold.edifice.StructureJSONKeys.ID;
 import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
@@ -12,7 +15,6 @@ import static me.reherhold.edifice.StructureJSONKeys.POSITION_Y;
 import static me.reherhold.edifice.StructureJSONKeys.POSITION_Z;
 import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
 import static me.reherhold.edifice.StructureJSONKeys.WORLD_UUID;
-
 import com.flowpowered.math.vector.Vector3i;
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
@@ -34,6 +36,8 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.util.Direction.Division;
 import org.spongepowered.api.world.World;
 
 import java.io.IOException;
@@ -105,15 +109,42 @@ public class SaveStructureExecutor implements CommandExecutor {
             int minZ = Math.min(this.loc1.getZ(), this.loc2.getZ());
             int maxZ = Math.max(this.loc1.getZ(), this.loc2.getZ());
 
+            Direction direction = Direction.getClosestHorizontal(convertRotation(player.getRotation()), Division.CARDINAL);
+
             JSONObject structure = new JSONObject()
                     .put(NAME, this.structureName)
                     .put(CREATOR_UUID, this.player.getUniqueId().toString())
                     .put(WIDTH, maxX - minX + 1)
                     .put(LENGTH, maxZ - minZ + 1)
                     .put(HEIGHT, maxY - minY + 1)
-                    .put(BLOCKS, new JSONArray());
+                    .put(BLOCKS, new JSONArray())
+                    .put(DIRECTION, direction.toString());
 
             player.sendMessage(Text.of(TextColors.GREEN, "Analyzing the structure..."));
+
+            Vector3i bottomCorner = new Vector3i(0, 0, 0);
+//            Vector3i topCorner = new Vector3i(0, 0, 0);
+            switch (direction) {
+                case NORTH:
+                    bottomCorner = new Vector3i(minX, minY, maxZ);
+//                    topCorner = new Vector3i(maxX, maxY, minZ);
+                    break;
+                case SOUTH:
+                    bottomCorner = new Vector3i(maxX, minY, minZ);
+//                    topCorner = new Vector3i(minX, maxY, maxZ);
+                    break;
+                case EAST:
+                    bottomCorner = new Vector3i(minX, minY, minZ);
+//                    topCorner = new Vector3i(maxX, maxY, maxZ);
+                    break;
+                case WEST:
+                    bottomCorner = new Vector3i(maxX, minY, maxZ);
+//                    topCorner = new Vector3i(minX, maxY, minZ);
+                    break;
+                default:
+                    player.sendMessage(Text.of(TextColors.RED, "Look in the direction facing the front of your structure."));
+                    return;
+            }
 
             for (int i = minX; i <= maxX; i++) {
                 for (int j = minY; j <= maxY; j++) {
@@ -132,8 +163,8 @@ public class SaveStructureExecutor implements CommandExecutor {
                         }
                         JSONObject jsonBlock = new JSONObject(writer.toString());
                         jsonBlock.remove(WORLD_UUID);
-                        jsonBlock.getJSONObject(POSITION).put(POSITION_X, i - minX)
-                                .put(POSITION_Y, j - minY).put(POSITION_Z, k - minZ);
+                        jsonBlock.getJSONObject(POSITION).put(POSITION_X, i - bottomCorner.getX())
+                                .put(POSITION_Y, j - bottomCorner.getY()).put(POSITION_Z, k - bottomCorner.getZ());
                         structure.getJSONArray(BLOCKS).put(jsonBlock);
                     }
                 }
@@ -173,5 +204,13 @@ public class SaveStructureExecutor implements CommandExecutor {
                                 + response.getEntity()));
             }
         }
+
+        private Vector3d convertRotation(Vector3d rotation) {
+            double pitch = ((rotation.getX() + 90) * Math.PI) / 180;
+            double yaw = ((rotation.getY() + 90) * Math.PI) / 180;
+            Vector3d vector = new Vector3d(Math.sin(pitch) * Math.cos(yaw), 0, Math.sin(pitch) * Math.sin(yaw));
+            return vector;
+        }
     }
+
 }

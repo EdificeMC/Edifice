@@ -1,6 +1,9 @@
 package me.reherhold.edifice.eventhandler;
 
+import org.spongepowered.api.event.Listener;
+
 import static me.reherhold.edifice.StructureJSONKeys.BLOCKS;
+import static me.reherhold.edifice.StructureJSONKeys.DIRECTION;
 import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
 import static me.reherhold.edifice.StructureJSONKeys.ID;
 import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
@@ -11,8 +14,8 @@ import static me.reherhold.edifice.StructureJSONKeys.POSITION_Y;
 import static me.reherhold.edifice.StructureJSONKeys.POSITION_Z;
 import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
 import static me.reherhold.edifice.StructureJSONKeys.WORLD_UUID;
-
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.Lists;
 import me.reherhold.edifice.Edifice;
 import me.reherhold.edifice.Structure;
 import me.reherhold.edifice.data.EdificeKeys;
@@ -20,6 +23,7 @@ import me.reherhold.edifice.data.structure.StructureData;
 import me.reherhold.edifice.data.structure.StructureDataManipulatorBuilder;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.json.JSONConfigurationLoader;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -31,7 +35,6 @@ import org.spongepowered.api.data.translator.ConfigurateTranslator;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.hanging.ItemFrame;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
 import org.spongepowered.api.event.filter.cause.Root;
@@ -52,11 +55,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-
-
 public class InteractEntityEventHandler {
 
     private Edifice plugin;
+    // Specifically arranged in clockwise direction
+    private static final List<Direction> CARDINAL_SET = Lists.newArrayList(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
 
     public InteractEntityEventHandler(Edifice plugin) {
         this.plugin = plugin;
@@ -136,12 +139,19 @@ public class InteractEntityEventHandler {
         if (structureBlock.getBlockType() != BlockTypes.CHEST) {
             return;
         }
-        
-        if(structureBlock.get(EdificeKeys.STRUCTURE).isPresent()) {
+
+        if (structureBlock.get(EdificeKeys.STRUCTURE).isPresent()) {
             player.sendMessage(Text.of(TextColors.RED, "There is already a structure in progress here!"));
             event.setCancelled(true);
             return;
         }
+
+        int rotationIterations =
+                CARDINAL_SET.indexOf(direction.getOpposite()) - CARDINAL_SET.indexOf(Direction.valueOf(structureJson.getString(DIRECTION)));
+        if (rotationIterations < 0) {
+            rotationIterations += 4;
+        }
+        rotateBlocks(structureJson.getJSONArray(BLOCKS), rotationIterations);
 
         Vector3i originLocation = itemFrameLoc.getBlockPosition().add(offset);
         Vector3i endLocation = originLocation.add(endingLocationOffset);
@@ -179,10 +189,11 @@ public class InteractEntityEventHandler {
                     return;
                 }
                 BlockSnapshot block = blockSnapOpt.get();
-                // Replace the dots with dashes because the dots are interpreted as a different path when they are serialized
+                // Replace the dots with dashes because the dots are interpreted
+                // as a different path when they are serialized
                 // by the Data API
                 String itemName = block.getProperty(HeldItemProperty.class).get().getValue().getTranslation().get().replace('.', '-');
-                if(deserializedStructureBlocks.containsKey(itemName)) {
+                if (deserializedStructureBlocks.containsKey(itemName)) {
                     deserializedStructureBlocks.get(itemName).add(block);
                 } else {
                     ArrayList<BlockSnapshot> newList = new ArrayList<BlockSnapshot>();
@@ -190,7 +201,8 @@ public class InteractEntityEventHandler {
                     deserializedStructureBlocks.put(itemName, newList);
                 }
             });
-        Structure structure = new Structure(structureJson.getString(NAME), deserializedStructureBlocks);
+        Structure structure =
+                new Structure(structureJson.getString(NAME), Direction.valueOf(structureJson.getString(DIRECTION)), deserializedStructureBlocks);
 
         StructureDataManipulatorBuilder builder =
                 (StructureDataManipulatorBuilder) Sponge.getDataManager().getManipulatorBuilder(StructureData.class).get();
@@ -209,5 +221,22 @@ public class InteractEntityEventHandler {
 
         new Location<World>(itemFrameLoc.getExtent(), originLocation).setBlockType(BlockTypes.GOLD_BLOCK);
         new Location<World>(itemFrameLoc.getExtent(), endLocation).setBlockType(BlockTypes.DIAMOND_BLOCK);
+    }
+
+    private void rotateBlocks(JSONArray blocks, int iterations) {
+        blocks.forEach((obj) -> {
+            JSONObject block = (JSONObject) obj;
+            JSONObject pos = block.getJSONObject(POSITION);
+            for (int i = 0; i < iterations; i++) {
+                int tmpX = pos.getInt(POSITION_X);
+                pos.put(POSITION_X, pos.getInt(POSITION_Z));
+                pos.put(POSITION_Z, -tmpX);
+            }
+            if (iterations == 1 || iterations == 3) {
+                pos.put(POSITION_Z, -pos.getInt(POSITION_Z));
+                pos.put(POSITION_X, -pos.getInt(POSITION_X));
+            }
+        });
+
     }
 }

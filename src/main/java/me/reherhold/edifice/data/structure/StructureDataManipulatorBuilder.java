@@ -7,6 +7,7 @@ import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.DataView;
 import org.spongepowered.api.data.manipulator.DataManipulatorBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
+import org.spongepowered.api.util.Direction;
 
 import java.util.HashMap;
 import java.util.Optional;
@@ -24,7 +25,7 @@ public class StructureDataManipulatorBuilder implements DataManipulatorBuilder<S
 
     @Override
     public StructureData create() {
-        return new StructureData(new Structure("", new HashMap<>()));
+        return new StructureData(new Structure("", Direction.NONE, new HashMap<>()));
     }
 
     @Override
