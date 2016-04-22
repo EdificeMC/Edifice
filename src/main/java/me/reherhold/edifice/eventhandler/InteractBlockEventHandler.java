@@ -1,5 +1,7 @@
 package me.reherhold.edifice.eventhandler;
 
+import org.spongepowered.api.profile.GameProfile;
+
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
 import me.reherhold.edifice.Structure;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 public class InteractBlockEventHandler {
 
@@ -70,9 +73,17 @@ public class InteractBlockEventHandler {
             materialsNeeded.add(Text.of(TextColors.GREEN, structure.getRemainingBlocks().get(material).size(), " ", TextColors.GOLD, material));
         }
 
+        Text title = Text.of("Constructing ", TextColors.GOLD, structure.getName());
+        // If possible, get the creator's name
+        try {
+            GameProfile creatorProfile = Sponge.getServer().getGameProfileManager().get(structure.getCreatorUUID()).get();
+            title = Text.of(title, TextColors.GREEN, " by ", TextColors.GOLD, creatorProfile.getName().get());
+        } catch (Exception e) {
+        }
+
         PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
         PaginationList.Builder builder = paginationService.builder();
-        builder.title(Text.of("Constructing ", TextColors.GOLD, structure.getName())).contents(materialsNeeded)
+        builder.title(title).contents(materialsNeeded)
                 .header(Text.of(TextColors.GREEN, "Materials needed to complete")).sendTo(player);
         event.setCancelled(true);
     }

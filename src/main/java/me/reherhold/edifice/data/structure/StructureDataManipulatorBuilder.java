@@ -1,7 +1,6 @@
 package me.reherhold.edifice.data.structure;
 
 import static me.reherhold.edifice.data.EdificeKeys.STRUCTURE;
-
 import me.reherhold.edifice.Structure;
 import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.DataView;
@@ -11,6 +10,7 @@ import org.spongepowered.api.util.Direction;
 
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.UUID;
 
 public class StructureDataManipulatorBuilder implements DataManipulatorBuilder<StructureData, ImmutableStructureData> {
 
@@ -25,7 +25,8 @@ public class StructureDataManipulatorBuilder implements DataManipulatorBuilder<S
 
     @Override
     public StructureData create() {
-        return new StructureData(new Structure("", Direction.NONE, new HashMap<>()));
+        UUID zeroUUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        return new StructureData(new Structure("", zeroUUID, zeroUUID, Direction.NONE, new HashMap<>()));
     }
 
     @Override

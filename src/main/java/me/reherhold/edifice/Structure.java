@@ -9,21 +9,34 @@ import org.spongepowered.api.util.Direction;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class Structure implements DataSerializable {
 
     private String name;
+    private UUID creatorUUID;
+    private UUID ownerUUID;
     private Direction direction;
     Map<String, List<BlockSnapshot>> remainingBlocks;
 
-    public Structure(String name, Direction direction, Map<String, List<BlockSnapshot>> remainingBlocks) {
+    public Structure(String name, UUID creatorUUID, UUID ownerUUID, Direction direction, Map<String, List<BlockSnapshot>> remainingBlocks) {
         this.name = name;
+        this.creatorUUID = creatorUUID;
+        this.ownerUUID = ownerUUID;
         this.direction = direction;
         this.remainingBlocks = remainingBlocks;
     }
 
     public String getName() {
         return name;
+    }
+
+    public UUID getCreatorUUID() {
+        return creatorUUID;
+    }
+
+    public UUID getOwnerUUID() {
+        return ownerUUID;
     }
 
     public Direction getDirection() {
@@ -41,7 +54,10 @@ public class Structure implements DataSerializable {
 
     @Override
     public DataContainer toContainer() {
-        return new MemoryDataContainer().set(StructureDataQueries.NAME, getName()).set(StructureDataQueries.DIRECTION, getDirection().toString())
+        return new MemoryDataContainer().set(StructureDataQueries.NAME, getName())
+                .set(StructureDataQueries.CREATOR_UUID, getCreatorUUID().toString())
+                .set(StructureDataQueries.OWNER_UUID, getOwnerUUID().toString())
+                .set(StructureDataQueries.DIRECTION, getDirection().toString())
                 .set(StructureDataQueries.BLOCKS, getRemainingBlocks());
     }
 

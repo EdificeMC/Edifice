@@ -6,6 +6,7 @@ public class StructureJSONKeys {
     public static final String ID = "_id";
     public static final String NAME = "name";
     public static final String CREATOR_UUID = "creatorUUID";
+    public static final String OWNER_UUID = "ownerUUID";
     public static final String WORLD_UUID = "WorldUuid";
     public static final String WIDTH = "width";
     public static final String LENGTH = "length";

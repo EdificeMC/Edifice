@@ -1,5 +1,8 @@
 package me.reherhold.edifice;
 
+import org.spongepowered.api.data.key.Keys;
+
+import org.spongepowered.api.entity.EntityTypes;
 import com.flowpowered.math.vector.Vector3i;
 import me.reherhold.edifice.data.EdificeKeys;
 import org.spongepowered.api.Sponge;
@@ -7,6 +10,7 @@ import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.Item;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.world.Location;
@@ -14,6 +18,7 @@ import org.spongepowered.api.world.World;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class WatchItemsRunnable implements Runnable {
 
@@ -35,6 +40,12 @@ public class WatchItemsRunnable implements Runnable {
                     continue;
                 }
 
+                if (!item.getCreator().isPresent()) {
+                    continue;
+                }
+
+                UUID ownerUUID = item.getCreator().get();
+
                 // Normally I would use a Priority R-tree, but it is somewhat
                 // unpractical to maintain a list of regions surrounding blocks
                 // with StructureData
@@ -47,6 +58,12 @@ public class WatchItemsRunnable implements Runnable {
                                 continue;
                             }
                             Structure structure = loc.get(EdificeKeys.STRUCTURE).get();
+                            // Check that the person who threw the items is also
+                            // creating the structure
+                            if (!structure.getOwnerUUID().equals(ownerUUID)) {
+                                continue;
+                            }
+
                             String itemName = itemStack.getType().getTranslation().get().replace('.', '-');
                             if (!structure.getRemainingBlocks().containsKey(itemName)) {
                                 continue;
@@ -59,18 +76,30 @@ public class WatchItemsRunnable implements Runnable {
                                     block.restore(true, false);
                                     blocks.remove(block);
                                     itemsFromStackUsed++;
-                                } else {
-                                    structure.getRemainingBlocks().remove(itemName);
-                                    break;
+                                    if (blocks.size() == 0) {
+                                        structure.getRemainingBlocks().remove(itemName);
+                                        break;
+                                    }
                                 }
                             }
-                            loc.offer(EdificeKeys.STRUCTURE, structure);
+
                             int itemsLeft = itemStack.getCount() - itemsFromStackUsed;
                             if (itemsLeft > 0) {
                                 ItemStack finalStack = ItemStack.builder().fromSnapshot(itemStack).quantity(itemsLeft).build();
-                                item.getLocation().getExtent().createEntity(finalStack.toContainer(), item.getLocation().getPosition());
+                                Entity itemToBeSpawned =
+                                        item.getLocation().getExtent().createEntity(EntityTypes.ITEM, item.getLocation().getPosition()).get();
+                                itemToBeSpawned.offer(Keys.REPRESENTED_ITEM, finalStack.createSnapshot());
+                                item.getLocation().getExtent().spawnEntity(itemToBeSpawned, Cause.source(this).build());
                             }
                             item.remove();
+
+                            if (structure.getRemainingBlocks().keySet().isEmpty()) {
+                                // If there are no more blocks to be placed,
+                                // remove the StructureData
+                                loc.remove(EdificeKeys.STRUCTURE);
+                            } else {
+                                loc.offer(EdificeKeys.STRUCTURE, structure);
+                            }
                         }
                     }
                 }

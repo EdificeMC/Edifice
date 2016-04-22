@@ -1,13 +1,14 @@
 package me.reherhold.edifice.eventhandler;
 
-import org.spongepowered.api.event.Listener;
-
+import org.spongepowered.api.profile.GameProfile;
 import static me.reherhold.edifice.StructureJSONKeys.BLOCKS;
+import static me.reherhold.edifice.StructureJSONKeys.CREATOR_UUID;
 import static me.reherhold.edifice.StructureJSONKeys.DIRECTION;
 import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
 import static me.reherhold.edifice.StructureJSONKeys.ID;
 import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
 import static me.reherhold.edifice.StructureJSONKeys.NAME;
+import static me.reherhold.edifice.StructureJSONKeys.OWNER_UUID;
 import static me.reherhold.edifice.StructureJSONKeys.POSITION;
 import static me.reherhold.edifice.StructureJSONKeys.POSITION_X;
 import static me.reherhold.edifice.StructureJSONKeys.POSITION_Y;
@@ -35,6 +36,7 @@ import org.spongepowered.api.data.translator.ConfigurateTranslator;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.hanging.ItemFrame;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
 import org.spongepowered.api.event.filter.cause.Root;
@@ -54,6 +56,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 public class InteractEntityEventHandler {
 
@@ -106,9 +110,6 @@ public class InteractEntityEventHandler {
         // Vector offset to be added to the item frame location to result in the
         // bottom corner of the structure
         Vector3i offset = new Vector3i(0, 0, 0);
-        // Vector offset to be added to the bottom corner to result in the
-        // top opposite corner of the structure
-        Vector3i endingLocationOffset = new Vector3i(0, 0, 0);
         // For each direction, we will put the block in the opposite direction
         // as the item frame, since the way the item frame "faces" is the side
         // away from the block it is on
@@ -116,22 +117,18 @@ public class InteractEntityEventHandler {
             case NORTH: // Towards negative z
                 structureBaseOffset = new Vector3i(0, 0, 1);
                 offset = new Vector3i(0, 0, 2);
-                endingLocationOffset = new Vector3i(-width, height, length);
                 break;
             case EAST: // Towards positive x
                 structureBaseOffset = new Vector3i(-1, 0, 0);
                 offset = new Vector3i(-2, 0, 0);
-                endingLocationOffset = new Vector3i(-width, height, -length);
                 break;
             case SOUTH: // Towards positive z
                 structureBaseOffset = new Vector3i(0, 0, -1);
                 offset = new Vector3i(0, 0, -2);
-                endingLocationOffset = new Vector3i(width, height, -length);
                 break;
             case WEST: // Towards negative x
                 structureBaseOffset = new Vector3i(1, 0, 0);
                 offset = new Vector3i(2, 0, 0);
-                endingLocationOffset = new Vector3i(width, height, length);
                 break;
         }
         Location<World> structureBlock = new Location<World>(itemFrameLoc.getExtent(), itemFrameLoc.getBlockPosition().add(structureBaseOffset));
@@ -154,7 +151,6 @@ public class InteractEntityEventHandler {
         rotateBlocks(structureJson.getJSONArray(BLOCKS), rotationIterations);
 
         Vector3i originLocation = itemFrameLoc.getBlockPosition().add(offset);
-        Vector3i endLocation = originLocation.add(endingLocationOffset);
 
         // TODO check if the area is clear based on config value
 
@@ -202,7 +198,9 @@ public class InteractEntityEventHandler {
                 }
             });
         Structure structure =
-                new Structure(structureJson.getString(NAME), Direction.valueOf(structureJson.getString(DIRECTION)), deserializedStructureBlocks);
+                new Structure(structureJson.getString(NAME), UUID.fromString(structureJson.getString(CREATOR_UUID)), player.getUniqueId(),
+                        Direction.valueOf(structureJson
+                                .getString(DIRECTION)), deserializedStructureBlocks);
 
         StructureDataManipulatorBuilder builder =
                 (StructureDataManipulatorBuilder) Sponge.getDataManager().getManipulatorBuilder(StructureData.class).get();
@@ -214,13 +212,20 @@ public class InteractEntityEventHandler {
             return;
         }
 
-        player.sendMessage(Text.of(TextColors.GREEN, "You have started the construction of ", TextColors.GOLD, structure.getName(), TextColors.GREEN,
-                "."));
+        Text msg1 = Text.of(TextColors.GREEN, "You have started the construction of ", TextColors.GOLD, structure.getName());
+        Text msg2 = Text.of(TextColors.GREEN, ".");
+
+        // If possible, get the creator's name
+        try {
+            GameProfile creatorProfile = Sponge.getServer().getGameProfileManager().get(structure.getCreatorUUID()).get();
+            msg2 = Text.of(TextColors.GREEN, " by ", TextColors.GOLD, creatorProfile.getName().get());
+        } catch (Exception e) {
+        }
+
+        player.sendMessage(Text.of(msg1, msg2));
         player.sendMessage(Text.of(TextColors.GREEN,
                 "You can right click the chest to see your progress. To begin, throw the necessary materials near the chest."));
 
-        new Location<World>(itemFrameLoc.getExtent(), originLocation).setBlockType(BlockTypes.GOLD_BLOCK);
-        new Location<World>(itemFrameLoc.getExtent(), endLocation).setBlockType(BlockTypes.DIAMOND_BLOCK);
     }
 
     private void rotateBlocks(JSONArray blocks, int iterations) {
