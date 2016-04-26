@@ -190,11 +190,15 @@ public class SaveStructureExecutor implements CommandExecutor {
                         TextColors.GREEN,
                         "."));
                 try {
-                    URL structureWebURL =
-                            new URL(SaveStructureExecutor.this.plugin.getConfig().getWebURI().toString() + "/structures/" + structureID);
-                    this.player.sendMessage(Text.of(TextColors.GREEN, "Click ",
-                            Text.builder("here").color(TextColors.GOLD).onClick(TextActions.openUrl(structureWebURL)).build(), TextColors.GREEN,
-                            " to see it."));
+                    this.player.sendMessage(Text.of(
+                            TextColors.GREEN,
+                            "Click ",
+                            Text.builder("here")
+                                    .color(TextColors.GOLD)
+                                    .onClick(
+                                            TextActions.openUrl(new URL(SaveStructureExecutor.this.plugin.getConfig().getWebURI().toString()
+                                                    + "/#/create/" + structureID))).build(), TextColors.GREEN,
+                            " to finalize it with images."));
 
                 } catch (MalformedURLException e) {
                 }

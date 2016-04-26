@@ -1,7 +1,5 @@
 package me.reherhold.edifice.eventhandler;
 
-import org.spongepowered.api.profile.GameProfile;
-
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
 import me.reherhold.edifice.Structure;
@@ -12,6 +10,8 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.filter.cause.Root;
+import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.service.pagination.PaginationService;
 import org.spongepowered.api.text.Text;
@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 public class InteractBlockEventHandler {
 
@@ -67,10 +66,10 @@ public class InteractBlockEventHandler {
     private void handleStructureInfo(InteractBlockEvent.Secondary event, Player player, Location<World> location) {
         Structure structure = location.get(EdificeKeys.STRUCTURE).get();
         List<Text> materialsNeeded = new ArrayList<Text>();
-        Iterator<String> materialIterator = structure.getRemainingBlocks().keySet().iterator();
-        while (materialIterator.hasNext()) {
-            String material = materialIterator.next();
-            materialsNeeded.add(Text.of(TextColors.GREEN, structure.getRemainingBlocks().get(material).size(), " ", TextColors.GOLD, material));
+        for (String itemId : structure.getRemainingBlocks().keySet()) {
+            ItemType itemType = Sponge.getRegistry().getType(ItemType.class, itemId).get();
+            materialsNeeded.add(Text.of(TextColors.GREEN, structure.getRemainingBlocks().get(itemId).size(), " ", TextColors.GOLD, itemType
+                    .getTranslation().get()));
         }
 
         Text title = Text.of("Constructing ", TextColors.GOLD, structure.getName());

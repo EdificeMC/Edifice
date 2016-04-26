@@ -185,16 +185,13 @@ public class InteractEntityEventHandler {
                     return;
                 }
                 BlockSnapshot block = blockSnapOpt.get();
-                // Replace the dots with dashes because the dots are interpreted
-                // as a different path when they are serialized
-                // by the Data API
-                String itemName = block.getProperty(HeldItemProperty.class).get().getValue().getTranslation().get().replace('.', '-');
-                if (deserializedStructureBlocks.containsKey(itemName)) {
-                    deserializedStructureBlocks.get(itemName).add(block);
+                String itemId = block.getProperty(HeldItemProperty.class).get().getValue().getId();
+                if (deserializedStructureBlocks.containsKey(itemId)) {
+                    deserializedStructureBlocks.get(itemId).add(block);
                 } else {
                     ArrayList<BlockSnapshot> newList = new ArrayList<BlockSnapshot>();
                     newList.add(block);
-                    deserializedStructureBlocks.put(itemName, newList);
+                    deserializedStructureBlocks.put(itemId, newList);
                 }
             });
         Structure structure =

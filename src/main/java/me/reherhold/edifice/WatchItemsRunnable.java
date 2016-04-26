@@ -64,11 +64,11 @@ public class WatchItemsRunnable implements Runnable {
                                 continue;
                             }
 
-                            String itemName = itemStack.getType().getTranslation().get().replace('.', '-');
-                            if (!structure.getRemainingBlocks().containsKey(itemName)) {
+                            String itemId = itemStack.getType().getId();
+                            if (!structure.getRemainingBlocks().containsKey(itemId)) {
                                 continue;
                             }
-                            List<BlockSnapshot> blocks = structure.getRemainingBlocks().get(itemName);
+                            List<BlockSnapshot> blocks = structure.getRemainingBlocks().get(itemId);
                             int itemsFromStackUsed = 0;
                             for (int i = 0; i < itemStack.getCount(); i++) {
                                 if (blocks.size() > 0) {
@@ -77,7 +77,7 @@ public class WatchItemsRunnable implements Runnable {
                                     blocks.remove(block);
                                     itemsFromStackUsed++;
                                     if (blocks.size() == 0) {
-                                        structure.getRemainingBlocks().remove(itemName);
+                                        structure.getRemainingBlocks().remove(itemId);
                                         break;
                                     }
                                 }
