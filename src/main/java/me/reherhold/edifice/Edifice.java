@@ -37,7 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-@Plugin(id = "edifice", name = "Edifice", version = "0.0.1")
+@Plugin(id = PomData.ARTIFACT_ID, name = PomData.NAME, version = PomData.VERSION)
 public class Edifice {
 
     @Inject @DefaultConfig(sharedRoot = false) private File configFile;
