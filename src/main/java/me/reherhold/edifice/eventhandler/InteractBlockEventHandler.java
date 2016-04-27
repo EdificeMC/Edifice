@@ -55,11 +55,11 @@ public class InteractBlockEventHandler {
         if (event instanceof InteractBlockEvent.Primary) {
             Location<World> existingRight = this.plugin.getPlayerSelectedLocations().get(player.getUniqueId()).getRight();
             this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(loc, existingRight));
-            player.sendMessage(Text.of(Constants.SET_FIRST_LOC, loc));
+            player.sendMessage(Text.of(Constants.SET_FIRST_LOC, TextColors.GOLD, loc.getPosition()));
         } else if (event instanceof InteractBlockEvent.Secondary) {
             Location<World> existingLeft = this.plugin.getPlayerSelectedLocations().get(player.getUniqueId()).getLeft();
             this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(existingLeft, loc));
-            player.sendMessage(Text.of(Constants.SET_SECOND_LOC, loc));
+            player.sendMessage(Text.of(Constants.SET_SECOND_LOC, TextColors.GOLD, loc.getPosition()));
         }
     }
 
