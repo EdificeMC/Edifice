@@ -11,6 +11,7 @@ import me.reherhold.edifice.data.structure.ImmutableStructureData;
 import me.reherhold.edifice.data.structure.StructureBuilder;
 import me.reherhold.edifice.data.structure.StructureData;
 import me.reherhold.edifice.data.structure.StructureDataManipulatorBuilder;
+import me.reherhold.edifice.eventhandler.ChangeBlockEventHandler;
 import me.reherhold.edifice.eventhandler.InteractBlockEventHandler;
 import me.reherhold.edifice.eventhandler.InteractEntityEventHandler;
 import ninja.leaping.configurate.ConfigurationNode;
@@ -61,6 +62,8 @@ public class Edifice {
     private void registerEventListeners() {
         // Watch for players left/right-clicking blocks
         Sponge.getEventManager().registerListeners(this, new InteractBlockEventHandler(this));
+        // Watch for players destroying blocks
+        Sponge.getEventManager().registerListeners(this, new ChangeBlockEventHandler(this));
         // Watch for players putting blueprints in item frames
         Sponge.getEventManager().registerListeners(this, new InteractEntityEventHandler(this));
     }
