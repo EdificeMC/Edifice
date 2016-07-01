@@ -25,8 +25,8 @@ public class EdificeConfiguration {
      * General Settings *
      ********************/
 
-    @Setting(value = "rest-uri", comment = "REST API URI") private URI restURI = URI.create("http://edifice.reherhold.me/api");
-    @Setting(value = "web-uri", comment = "Website URI") private URI webURI = URI.create("http://edifice.reherhold.me");
+    @Setting(value = "rest-uri", comment = "REST API URI") private URI restURI = URI.create("https://api.edificemc.com");
+    @Setting(value = "web-uri", comment = "Website URI") private URI webURI = URI.create("edificemc.com/#"); // No 'https://www' for better UI 
 
     public URI getRestURI() {
         return this.restURI;
