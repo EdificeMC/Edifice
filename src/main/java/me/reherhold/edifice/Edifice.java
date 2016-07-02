@@ -1,6 +1,35 @@
 package me.reherhold.edifice;
 
+import java.io.File;
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.command.args.GenericArguments;
+import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.config.DefaultConfig;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
+import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
+
 import com.google.inject.Inject;
+
 import me.reherhold.edifice.command.executor.EdificeWandExecutor;
 import me.reherhold.edifice.command.executor.GiveBluePrintExecutor;
 import me.reherhold.edifice.command.executor.SaveStructureExecutor;
@@ -18,25 +47,6 @@ import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.args.GenericArguments;
-import org.spongepowered.api.command.spec.CommandSpec;
-import org.spongepowered.api.config.DefaultConfig;
-import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
-import org.spongepowered.api.plugin.Plugin;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
 
 @Plugin(id = PomData.ARTIFACT_ID, name = PomData.NAME, version = PomData.VERSION)
 public class Edifice {
@@ -47,16 +57,35 @@ public class Edifice {
     private EdificeConfiguration config;
     private HashMap<UUID, Boolean> playerWandActivationStates;
     private HashMap<UUID, Pair<Location<World>, Location<World>>> playerSelectedLocations;
+    private Client client;
 
     @Listener
     public void preInit(GamePreInitializationEvent event) {
         this.playerWandActivationStates = new HashMap<UUID, Boolean>();
         this.playerSelectedLocations = new HashMap<UUID, Pair<Location<World>, Location<World>>>();
+        try {
+			setupRestClient();
+		} catch (KeyManagementException | NoSuchAlgorithmException e) {
+			logger.error("Could not initialize the REST client with TLS enabled. Shutting down.");
+			e.printStackTrace();
+			Sponge.getServer().shutdown();
+		}
         registerEventListeners();
         registerCommands();
         setupConfig();
         registerData();
         startItemEntityListener();
+    }
+    
+    private void setupRestClient() throws NoSuchAlgorithmException, KeyManagementException {
+		SSLContext sslCxt = SSLContext.getInstance("TLSv1");
+		System.setProperty("https.protocols", "TLSv1");
+
+		TrustManager[] trustAllCerts = { new InsecureTrustManager() };
+		sslCxt.init(null, trustAllCerts, new java.security.SecureRandom());
+		HostnameVerifier allHostsValid = new InsecureHostnameVerifier();
+
+		this.client = ClientBuilder.newBuilder().sslContext(sslCxt).hostnameVerifier(allHostsValid).build();
     }
 
     private void registerEventListeners() {
@@ -163,6 +192,10 @@ public class Edifice {
 
     public EdificeConfiguration getConfig() {
         return this.config;
+    }
+    
+    public Client getClient() {
+    	return this.client;
     }
 
     public Logger getLogger() {

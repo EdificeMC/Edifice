@@ -1,15 +1,17 @@
 package me.reherhold.edifice.command.executor;
 
-import org.json.JSONException;
-
 import static me.reherhold.edifice.StructureJSONKeys.CREATOR_UUID;
 import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
 import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
 import static me.reherhold.edifice.StructureJSONKeys.NAME;
 import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
-import me.reherhold.edifice.Constants;
-import me.reherhold.edifice.Edifice;
-import me.reherhold.edifice.data.blueprint.BlueprintData;
+
+import java.util.Arrays;
+import java.util.UUID;
+
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+
 import org.json.JSONObject;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -25,14 +27,9 @@ import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import java.util.Arrays;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
+import me.reherhold.edifice.Constants;
+import me.reherhold.edifice.Edifice;
+import me.reherhold.edifice.data.blueprint.BlueprintData;
 
 public class GiveBluePrintExecutor implements CommandExecutor {
 
@@ -51,7 +48,7 @@ public class GiveBluePrintExecutor implements CommandExecutor {
         // Already know this will be present since the argument is required
         String structureID = (String) args.getOne("id").get();
 
-        Sponge.getScheduler().createTaskBuilder().execute(new GiveBluePrintRunnable(player, structureID))
+        Sponge.getScheduler().createTaskBuilder().execute(new GiveBluePrintRunnable(this.plugin, player, structureID))
                 .async().name("Edifice - Fetch Structure from REST API").submit(this.plugin);
 
         return CommandResult.success();
@@ -61,15 +58,16 @@ public class GiveBluePrintExecutor implements CommandExecutor {
 
         private Player player;
         private String structureID;
+        private Edifice plugin;
 
-        public GiveBluePrintRunnable(Player player, String structureID) {
+        public GiveBluePrintRunnable(Edifice plugin, Player player, String structureID) {
             this.player = player;
             this.structureID = structureID;
+            this.plugin = plugin;
         }
 
         public void run() {
-            Client client = ClientBuilder.newClient();
-            WebTarget target = client.target(GiveBluePrintExecutor.this.plugin.getConfig().getRestURI().toString() + "/structures/" + structureID);
+            WebTarget target = this.plugin.getClient().target(GiveBluePrintExecutor.this.plugin.getConfig().getRestURI().toString() + "/structures/" + structureID);
             Response response = target.request().get();
             if (response.getStatus() != 200) {
                 player.sendMessage(Text.of(TextColors.RED, "Could not find a structure with ID " + structureID));
