@@ -19,7 +19,8 @@ public class ChangeBlockEventHandler {
 
 	@Listener
 	public void breakBlock(ChangeBlockEvent.Break event, @Root Player player) {
-		if (this.plugin.getPlayerWandActivationStates().containsKey(player.getUniqueId())) {
+		if (this.plugin.getPlayerWandActivationStates().containsKey(player.getUniqueId())
+				&& this.plugin.getPlayerWandActivationStates().get(player.getUniqueId())) {
 			if (player.get(Keys.GAME_MODE).get() == GameModes.CREATIVE) {
 				event.setCancelled(true);
 			}
