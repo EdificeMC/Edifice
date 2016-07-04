@@ -185,7 +185,16 @@ public class InteractEntityEventHandler {
                     return;
                 }
                 BlockSnapshot block = blockSnapOpt.get();
-                String itemId = block.getProperty(HeldItemProperty.class).get().getValue().getId();
+                Optional<HeldItemProperty> itemEquivalentOpt = block.getProperty(HeldItemProperty.class);
+                String itemId;
+                if(itemEquivalentOpt.isPresent()) {
+                	itemId = itemEquivalentOpt.get().getValue().getId();
+                } else {
+                	// TODO lookup the right item to fit the block
+                	// i.e. redstone lamp to fit lit redstone lamp
+                	return;
+                }
+                
                 if (deserializedStructureBlocks.containsKey(itemId)) {
                     deserializedStructureBlocks.get(itemId).add(block);
                 } else {
