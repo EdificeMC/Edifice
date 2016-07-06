@@ -1,6 +1,5 @@
 package me.reherhold.edifice.eventhandler;
 
-import org.spongepowered.api.profile.GameProfile;
 import static me.reherhold.edifice.StructureJSONKeys.BLOCKS;
 import static me.reherhold.edifice.StructureJSONKeys.CREATOR_UUID;
 import static me.reherhold.edifice.StructureJSONKeys.DIRECTION;
@@ -8,45 +7,12 @@ import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
 import static me.reherhold.edifice.StructureJSONKeys.ID;
 import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
 import static me.reherhold.edifice.StructureJSONKeys.NAME;
-import static me.reherhold.edifice.StructureJSONKeys.OWNER_UUID;
 import static me.reherhold.edifice.StructureJSONKeys.POSITION;
 import static me.reherhold.edifice.StructureJSONKeys.POSITION_X;
 import static me.reherhold.edifice.StructureJSONKeys.POSITION_Y;
 import static me.reherhold.edifice.StructureJSONKeys.POSITION_Z;
 import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
 import static me.reherhold.edifice.StructureJSONKeys.WORLD_UUID;
-import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Lists;
-import me.reherhold.edifice.Edifice;
-import me.reherhold.edifice.Structure;
-import me.reherhold.edifice.data.EdificeKeys;
-import me.reherhold.edifice.data.structure.StructureData;
-import me.reherhold.edifice.data.structure.StructureDataManipulatorBuilder;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.json.JSONConfigurationLoader;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.spongepowered.api.Sponge;
-import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.block.BlockTypes;
-import org.spongepowered.api.data.DataTransactionResult;
-import org.spongepowered.api.data.key.Keys;
-import org.spongepowered.api.data.property.block.HeldItemProperty;
-import org.spongepowered.api.data.translator.ConfigurateTranslator;
-import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.hanging.ItemFrame;
-import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.Order;
-import org.spongepowered.api.event.entity.InteractEntityEvent;
-import org.spongepowered.api.event.filter.cause.Root;
-import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.item.inventory.ItemStackSnapshot;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.util.Direction;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -57,16 +23,101 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.block.BlockType;
+import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.data.DataTransactionResult;
+import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.property.block.HeldItemProperty;
+import org.spongepowered.api.data.translator.ConfigurateTranslator;
+import org.spongepowered.api.data.type.HandTypes;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.hanging.ItemFrame;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
+import org.spongepowered.api.event.entity.InteractEntityEvent;
+import org.spongepowered.api.event.filter.cause.Root;
+import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.profile.GameProfile;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
+
+import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+import me.reherhold.edifice.Edifice;
+import me.reherhold.edifice.Structure;
+import me.reherhold.edifice.data.EdificeKeys;
+import me.reherhold.edifice.data.structure.StructureData;
+import me.reherhold.edifice.data.structure.StructureDataManipulatorBuilder;
+import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.json.JSONConfigurationLoader;
 
 public class InteractEntityEventHandler {
 
     private Edifice plugin;
     // Specifically arranged in clockwise direction
     private static final List<Direction> CARDINAL_SET = Lists.newArrayList(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
+    // All of the BlockTypes for which HeldItemProperty does not exist, mapped to what it should be
+    private static final Map<BlockType, ItemType> BLOCK_ITEM_MAP = Maps.newHashMap();
 
     public InteractEntityEventHandler(Edifice plugin) {
         this.plugin = plugin;
+        BLOCK_ITEM_MAP.put(BlockTypes.ACACIA_DOOR, ItemTypes.ACACIA_DOOR);
+        BLOCK_ITEM_MAP.put(BlockTypes.BED, ItemTypes.BED);
+        BLOCK_ITEM_MAP.put(BlockTypes.BEETROOTS, ItemTypes.BEETROOT_SEEDS);
+        BLOCK_ITEM_MAP.put(BlockTypes.BIRCH_DOOR, ItemTypes.BIRCH_DOOR);
+        BLOCK_ITEM_MAP.put(BlockTypes.BREWING_STAND, ItemTypes.BREWING_STAND);
+        BLOCK_ITEM_MAP.put(BlockTypes.CAKE, ItemTypes.CAKE);
+        BLOCK_ITEM_MAP.put(BlockTypes.CARROTS, ItemTypes.CARROT);
+        BLOCK_ITEM_MAP.put(BlockTypes.CAULDRON, ItemTypes.CAULDRON);
+//        BLOCK_ITEM_MAP.put(BlockTypes.COCOA, ItemTypes.) // TODO No ItemType for cocoa?
+        BLOCK_ITEM_MAP.put(BlockTypes.DARK_OAK_DOOR, ItemTypes.DARK_OAK_DOOR);
+        BLOCK_ITEM_MAP.put(BlockTypes.DAYLIGHT_DETECTOR_INVERTED, ItemTypes.DAYLIGHT_DETECTOR);
+        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_STONE_SLAB, ItemTypes.STONE_SLAB); // TODO Not double... needs to be fixed
+        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_STONE_SLAB2, ItemTypes.STONE_SLAB2); // TODO Not double... needs to be fixed
+        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_WOODEN_SLAB, ItemTypes.WOODEN_SLAB); // TODO figure out how this works w/ different wood types
+        BLOCK_ITEM_MAP.put(BlockTypes.FIRE, ItemTypes.NONE); // TODO figure out how to deal w/ this
+        BLOCK_ITEM_MAP.put(BlockTypes.FLOWER_POT, ItemTypes.FLOWER_POT);
+        BLOCK_ITEM_MAP.put(BlockTypes.IRON_DOOR, ItemTypes.IRON_DOOR);
+        BLOCK_ITEM_MAP.put(BlockTypes.JUNGLE_DOOR, ItemTypes.JUNGLE_DOOR);
+        BLOCK_ITEM_MAP.put(BlockTypes.LAVA, ItemTypes.LAVA_BUCKET); // TODO make sure the player gets the bucket back
+        BLOCK_ITEM_MAP.put(BlockTypes.LIT_REDSTONE_LAMP, ItemTypes.REDSTONE_LAMP);
+        BLOCK_ITEM_MAP.put(BlockTypes.LIT_REDSTONE_ORE, ItemTypes.REDSTONE_ORE);
+        BLOCK_ITEM_MAP.put(BlockTypes.MELON_STEM, ItemTypes.MELON_SEEDS);
+        BLOCK_ITEM_MAP.put(BlockTypes.NETHER_WART, ItemTypes.NETHER_WART);
+        BLOCK_ITEM_MAP.put(BlockTypes.POTATOES, ItemTypes.POTATO);
+        BLOCK_ITEM_MAP.put(BlockTypes.POWERED_COMPARATOR, ItemTypes.COMPARATOR);
+        BLOCK_ITEM_MAP.put(BlockTypes.POWERED_REPEATER, ItemTypes.REPEATER);
+        BLOCK_ITEM_MAP.put(BlockTypes.PUMPKIN_STEM, ItemTypes.PUMPKIN_SEEDS);
+        BLOCK_ITEM_MAP.put(BlockTypes.PURPUR_DOUBLE_SLAB, ItemTypes.PURPUR_BLOCK);
+        BLOCK_ITEM_MAP.put(BlockTypes.REDSTONE_WIRE, ItemTypes.REDSTONE);
+        BLOCK_ITEM_MAP.put(BlockTypes.REEDS, ItemTypes.REEDS);
+        BLOCK_ITEM_MAP.put(BlockTypes.SKULL, ItemTypes.SKULL);
+        BLOCK_ITEM_MAP.put(BlockTypes.SPRUCE_DOOR, ItemTypes.SPRUCE_DOOR);
+        BLOCK_ITEM_MAP.put(BlockTypes.STANDING_BANNER, ItemTypes.BANNER);
+        BLOCK_ITEM_MAP.put(BlockTypes.STANDING_SIGN, ItemTypes.SIGN);
+        BLOCK_ITEM_MAP.put(BlockTypes.TRIPWIRE, ItemTypes.STRING);
+        BLOCK_ITEM_MAP.put(BlockTypes.UNLIT_REDSTONE_TORCH, ItemTypes.REDSTONE_TORCH);
+        BLOCK_ITEM_MAP.put(BlockTypes.UNPOWERED_COMPARATOR, ItemTypes.COMPARATOR);
+        BLOCK_ITEM_MAP.put(BlockTypes.UNPOWERED_REPEATER, ItemTypes.REPEATER);
+        BLOCK_ITEM_MAP.put(BlockTypes.WALL_BANNER, ItemTypes.BANNER);
+        BLOCK_ITEM_MAP.put(BlockTypes.WALL_SIGN, ItemTypes.SIGN);
+        BLOCK_ITEM_MAP.put(BlockTypes.WATER, ItemTypes.WATER_BUCKET);
+        BLOCK_ITEM_MAP.put(BlockTypes.WHEAT, ItemTypes.WHEAT_SEEDS);
+        BLOCK_ITEM_MAP.put(BlockTypes.WOODEN_DOOR, ItemTypes.WOODEN_DOOR);
     }
 
     @SuppressWarnings("incomplete-switch")
@@ -89,7 +140,7 @@ public class InteractEntityEventHandler {
         // so it is almost certain that whatever item that is being placed will
         // end up in the frame
 
-        Optional<ItemStack> itemOpt = player.getItemInHand();
+        Optional<ItemStack> itemOpt = player.getItemInHand(HandTypes.MAIN_HAND);
         if (!itemOpt.isPresent()) {
             return;
         }
@@ -186,15 +237,15 @@ public class InteractEntityEventHandler {
                 }
                 BlockSnapshot block = blockSnapOpt.get();
                 Optional<HeldItemProperty> itemEquivalentOpt = block.getProperty(HeldItemProperty.class);
-                String itemId;
+                ItemType itemType = null;
                 if(itemEquivalentOpt.isPresent()) {
-                	itemId = itemEquivalentOpt.get().getValue().getId();
+                	itemType = itemEquivalentOpt.get().getValue();
+                } else if(BLOCK_ITEM_MAP.containsKey(block.getState().getType())) {
+                	itemType = BLOCK_ITEM_MAP.get(block.getState().getType());
                 } else {
-                	// TODO lookup the right item to fit the block
-                	// i.e. redstone lamp to fit lit redstone lamp
                 	return;
                 }
-                
+                String itemId = itemType.getId();
                 if (deserializedStructureBlocks.containsKey(itemId)) {
                     deserializedStructureBlocks.get(itemId).add(block);
                 } else {
