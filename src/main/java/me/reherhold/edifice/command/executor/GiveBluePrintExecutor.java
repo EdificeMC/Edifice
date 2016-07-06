@@ -7,7 +7,9 @@ import static me.reherhold.edifice.StructureJSONKeys.NAME;
 import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
@@ -48,7 +50,7 @@ public class GiveBluePrintExecutor implements CommandExecutor {
         // Already know this will be present since the argument is required
         String structureID = (String) args.getOne("id").get();
 
-        Sponge.getScheduler().createTaskBuilder().execute(new GiveBluePrintRunnable(this.plugin, player, structureID))
+        Sponge.getScheduler().createTaskBuilder().execute(new GiveBluePrintRunnable(player, structureID))
                 .async().name("Edifice - Fetch Structure from REST API").submit(this.plugin);
 
         return CommandResult.success();
@@ -58,22 +60,25 @@ public class GiveBluePrintExecutor implements CommandExecutor {
 
         private Player player;
         private String structureID;
-        private Edifice plugin;
 
-        public GiveBluePrintRunnable(Edifice plugin, Player player, String structureID) {
+        public GiveBluePrintRunnable(Player player, String structureID) {
             this.player = player;
             this.structureID = structureID;
-            this.plugin = plugin;
         }
 
         public void run() {
-            WebTarget target = this.plugin.getClient().target(GiveBluePrintExecutor.this.plugin.getConfig().getRestURI().toString() + "/structures/" + structureID);
-            Response response = target.request().get();
-            if (response.getStatus() != 200) {
+        	Optional<JSONObject> structureOpt = Optional.empty();
+			try {
+				structureOpt = Edifice.structureCache.getById(this.structureID).get();
+			} catch (InterruptedException | ExecutionException e1) {
+				e1.printStackTrace();
+			}
+			
+            if (!structureOpt.isPresent()) {
                 player.sendMessage(Text.of(TextColors.RED, "Could not find a structure with ID " + structureID));
                 return;
             }
-            JSONObject structure = new JSONObject(response.readEntity(String.class));
+            JSONObject structure = structureOpt.get();
 
             String creatorName;
             try {

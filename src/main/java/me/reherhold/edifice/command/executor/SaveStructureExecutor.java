@@ -81,7 +81,7 @@ public class SaveStructureExecutor implements CommandExecutor {
 		Vector3i loc2 = this.plugin.getPlayerSelectedLocations().get(uuid).getRight().getBlockPosition();
 
 		Sponge.getScheduler()
-				.createTaskBuilder().execute(new SaveStructureRunnable(this.plugin, player,
+				.createTaskBuilder().execute(new SaveStructureRunnable(player,
 						(String) args.getOne("name").get(), w, loc1, loc2))
 				.async().name("Edifice - Submit Structure to REST API").submit(this.plugin);
 
@@ -95,11 +95,9 @@ public class SaveStructureExecutor implements CommandExecutor {
 		private World world;
 		private Vector3i loc1;
 		private Vector3i loc2;
-		private Edifice plugin;
 
-		public SaveStructureRunnable(Edifice plugin, Player player, String structureName, World world, Vector3i loc1,
+		public SaveStructureRunnable(Player player, String structureName, World world, Vector3i loc1,
 				Vector3i loc2) {
-			this.plugin = plugin;
 			this.player = player;
 			this.structureName = structureName;
 			this.world = world;
@@ -176,8 +174,8 @@ public class SaveStructureExecutor implements CommandExecutor {
 
 			player.sendMessage(Text.of(TextColors.GREEN, "Uploading the structure..."));
 
-			WebTarget target = this.plugin.getClient()
-					.target(SaveStructureExecutor.this.plugin.getConfig().getRestURI().toString() + "/structures");
+			WebTarget target = Edifice.restClient
+					.target(Edifice.config.getRestURI().toString() + "/structures");
 			Response response;
 			try {
 				response = target.request().post(Entity.entity(structure.toString(), MediaType.APPLICATION_JSON_TYPE));
@@ -196,7 +194,7 @@ public class SaveStructureExecutor implements CommandExecutor {
 					this.player.sendMessage(Text.of(TextColors.GREEN, "Click ",
 							Text.builder("here").color(TextColors.GOLD)
 									.onClick(TextActions.openUrl(
-											new URL(SaveStructureExecutor.this.plugin.getConfig().getWebURI().toString()
+											new URL(Edifice.config.getWebURI().toString()
 													+ "/create/" + structureID)))
 									.build(),
 							TextColors.GREEN, " to finalize it with a screenshot."));

@@ -2,6 +2,7 @@ package me.reherhold.edifice;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -20,6 +21,7 @@ import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
@@ -51,18 +53,21 @@ import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 @Plugin(id = PomData.ARTIFACT_ID, name = PomData.NAME, version = PomData.VERSION)
 public class Edifice {
 
+	@Inject @ConfigDir(sharedRoot = false) private Path configDir;
     @Inject @DefaultConfig(sharedRoot = false) private File configFile;
     @Inject @DefaultConfig(sharedRoot = false) private ConfigurationLoader<CommentedConfigurationNode> configLoader;
     @Inject private Logger logger;
-    private EdificeConfiguration config;
+    public static EdificeConfiguration config;
     private HashMap<UUID, Boolean> playerWandActivationStates;
     private HashMap<UUID, Pair<Location<World>, Location<World>>> playerSelectedLocations;
-    private Client client;
+    public static Client restClient;
+    public static StructureCache structureCache;
 
     @Listener
     public void preInit(GamePreInitializationEvent event) {
         this.playerWandActivationStates = new HashMap<UUID, Boolean>();
         this.playerSelectedLocations = new HashMap<UUID, Pair<Location<World>, Location<World>>>();
+        Edifice.structureCache = new StructureCache(configDir.resolve("structures"));
         try {
 			setupRestClient();
 		} catch (KeyManagementException | NoSuchAlgorithmException e) {
@@ -85,7 +90,7 @@ public class Edifice {
 		sslCxt.init(null, trustAllCerts, new java.security.SecureRandom());
 		HostnameVerifier allHostsValid = new InsecureHostnameVerifier();
 
-		this.client = ClientBuilder.newBuilder().sslContext(sslCxt).hostnameVerifier(allHostsValid).build();
+		Edifice.restClient = ClientBuilder.newBuilder().sslContext(sslCxt).hostnameVerifier(allHostsValid).build();
     }
 
     private void registerEventListeners() {
@@ -138,7 +143,7 @@ public class Edifice {
         ConfigurationNode rawConfig = null;
         try {
             rawConfig = this.configLoader.load();
-            this.config = EdificeConfiguration.MAPPER.bindToNew().populate(rawConfig);
+            Edifice.config = EdificeConfiguration.MAPPER.bindToNew().populate(rawConfig);
         } catch (IOException e) {
             this.logger.warn("The configuration could not be loaded! Using the default configuration");
         } catch (ObjectMappingException e) {
@@ -161,8 +166,8 @@ public class Edifice {
 
             try {
                 // Populate config with default values
-                this.config = EdificeConfiguration.MAPPER.bindToNew().populate(rawConfig);
-                EdificeConfiguration.MAPPER.bind(this.config).serialize(rawConfig);
+                Edifice.config = EdificeConfiguration.MAPPER.bindToNew().populate(rawConfig);
+                EdificeConfiguration.MAPPER.bind(Edifice.config).serialize(rawConfig);
             } catch (ObjectMappingException e) {
                 e.printStackTrace();
             }
@@ -190,18 +195,10 @@ public class Edifice {
                 .submit(this);
     }
 
-    public EdificeConfiguration getConfig() {
-        return this.config;
-    }
-    
-    public Client getClient() {
-    	return this.client;
-    }
-
     public Logger getLogger() {
         return this.logger;
     }
-
+    
     public HashMap<UUID, Boolean> getPlayerWandActivationStates() {
         return this.playerWandActivationStates;
     }
