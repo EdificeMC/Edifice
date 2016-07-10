@@ -11,6 +11,8 @@ import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.Item;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
+import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.world.Location;
@@ -89,7 +91,8 @@ public class WatchItemsRunnable implements Runnable {
                                 Entity itemToBeSpawned =
                                         item.getLocation().getExtent().createEntity(EntityTypes.ITEM, item.getLocation().getPosition()).get();
                                 itemToBeSpawned.offer(Keys.REPRESENTED_ITEM, finalStack.createSnapshot());
-                                item.getLocation().getExtent().spawnEntity(itemToBeSpawned, Cause.source(this).build());
+                                item.getLocation().getExtent().spawnEntity(itemToBeSpawned,  Cause.source(EntitySpawnCause.builder()
+                                        .entity(itemToBeSpawned).type(SpawnTypes.PLUGIN).build()).build());
                             }
                             item.remove();
 
