@@ -149,140 +149,145 @@ public class InteractEntityEventHandler {
         if (!blueprintDataOpt.isPresent()) {
             return;
         }
-        JSONObject structureJson = new JSONObject(blueprintDataOpt.get());
-        int width = structureJson.getInt(WIDTH);
-        int length = structureJson.getInt(LENGTH);
-        int height = structureJson.getInt(HEIGHT);
-        Location<World> itemFrameLoc = itemFrame.getLocation();
-        Direction direction = itemFrame.direction().get();
-        // Vector offset to be added to the item frame location to result in the
-        // location of the block containing the StructureData
-        Vector3i structureBaseOffset = new Vector3i(0, 0, 0);
-        // Vector offset to be added to the item frame location to result in the
-        // bottom corner of the structure
-        Vector3i offset = new Vector3i(0, 0, 0);
-        // For each direction, we will put the block in the opposite direction
-        // as the item frame, since the way the item frame "faces" is the side
-        // away from the block it is on
-        switch (direction) {
-            case NORTH: // Towards negative z
-                structureBaseOffset = new Vector3i(0, 0, 1);
-                offset = new Vector3i(0, 0, 2);
-                break;
-            case EAST: // Towards positive x
-                structureBaseOffset = new Vector3i(-1, 0, 0);
-                offset = new Vector3i(-2, 0, 0);
-                break;
-            case SOUTH: // Towards positive z
-                structureBaseOffset = new Vector3i(0, 0, -1);
-                offset = new Vector3i(0, 0, -2);
-                break;
-            case WEST: // Towards negative x
-                structureBaseOffset = new Vector3i(1, 0, 0);
-                offset = new Vector3i(2, 0, 0);
-                break;
-        }
-        Location<World> structureBlock = new Location<World>(itemFrameLoc.getExtent(), itemFrameLoc.getBlockPosition().add(structureBaseOffset));
+        Edifice.structureCache.getById(blueprintDataOpt.get()).thenAcceptAsync((optStructure) -> {
+        	if(!optStructure.isPresent()) {
+        		return;
+        	}
+        	JSONObject structureJson = optStructure.get();
+        	
+        	int width = structureJson.getInt(WIDTH);
+            int length = structureJson.getInt(LENGTH);
+            int height = structureJson.getInt(HEIGHT);
+            Location<World> itemFrameLoc = itemFrame.getLocation();
+            Direction direction = itemFrame.direction().get();
+            // Vector offset to be added to the item frame location to result in the
+            // location of the block containing the StructureData
+            Vector3i structureBaseOffset = new Vector3i(0, 0, 0);
+            // Vector offset to be added to the item frame location to result in the
+            // bottom corner of the structure
+            Vector3i offset = new Vector3i(0, 0, 0);
+            // For each direction, we will put the block in the opposite direction
+            // as the item frame, since the way the item frame "faces" is the side
+            // away from the block it is on
+            switch (direction) {
+                case NORTH: // Towards negative z
+                    structureBaseOffset = new Vector3i(0, 0, 1);
+                    offset = new Vector3i(0, 0, 2);
+                    break;
+                case EAST: // Towards positive x
+                    structureBaseOffset = new Vector3i(-1, 0, 0);
+                    offset = new Vector3i(-2, 0, 0);
+                    break;
+                case SOUTH: // Towards positive z
+                    structureBaseOffset = new Vector3i(0, 0, -1);
+                    offset = new Vector3i(0, 0, -2);
+                    break;
+                case WEST: // Towards negative x
+                    structureBaseOffset = new Vector3i(1, 0, 0);
+                    offset = new Vector3i(2, 0, 0);
+                    break;
+            }
+            Location<World> structureBlock = new Location<World>(itemFrameLoc.getExtent(), itemFrameLoc.getBlockPosition().add(structureBaseOffset));
 
-        if (structureBlock.getBlockType() != BlockTypes.CHEST) {
-            return;
-        }
+            if (structureBlock.getBlockType() != BlockTypes.CHEST) {
+                return;
+            }
 
-        if (structureBlock.get(EdificeKeys.STRUCTURE).isPresent()) {
-            player.sendMessage(Text.of(TextColors.RED, "There is already a structure in progress here!"));
-            event.setCancelled(true);
-            return;
-        }
+            if (structureBlock.get(EdificeKeys.STRUCTURE).isPresent()) {
+                player.sendMessage(Text.of(TextColors.RED, "There is already a structure in progress here!"));
+                event.setCancelled(true);
+                return;
+            }
 
-        int rotationIterations =
-                CARDINAL_SET.indexOf(direction.getOpposite()) - CARDINAL_SET.indexOf(Direction.valueOf(structureJson.getString(DIRECTION)));
-        if (rotationIterations < 0) {
-            rotationIterations += 4;
-        }
-        rotateBlocks(structureJson.getJSONArray(BLOCKS), rotationIterations);
+            int rotationIterations =
+                    CARDINAL_SET.indexOf(direction.getOpposite()) - CARDINAL_SET.indexOf(Direction.valueOf(structureJson.getString(DIRECTION)));
+            if (rotationIterations < 0) {
+                rotationIterations += 4;
+            }
+            rotateBlocks(structureJson.getJSONArray(BLOCKS), rotationIterations);
 
-        Vector3i originLocation = itemFrameLoc.getBlockPosition().add(offset);
+            Vector3i originLocation = itemFrameLoc.getBlockPosition().add(offset);
 
-        // TODO check if the area is clear based on config value
+            // TODO check if the area is clear based on config value
 
-        Map<String, List<BlockSnapshot>> deserializedStructureBlocks = new HashMap<String, List<BlockSnapshot>>();
-        // Take all of the blocks and add the origin location to restore their
-        // locations and world UUID
-        structureJson.getJSONArray(BLOCKS).forEach((obj) -> {
-            JSONObject blockJson = (JSONObject) obj;
-            JSONObject pos = blockJson.getJSONObject(POSITION);
-            pos.put(POSITION_X, pos.getInt(POSITION_X) + originLocation.getX());
-            pos.put(POSITION_Y, pos.getInt(POSITION_Y) + originLocation.getY());
-            pos.put(POSITION_Z, pos.getInt(POSITION_Z) + originLocation.getZ());
-            blockJson.put(WORLD_UUID, itemFrameLoc.getExtent().getUniqueId().toString());
+            Map<String, List<BlockSnapshot>> deserializedStructureBlocks = new HashMap<String, List<BlockSnapshot>>();
+            // Take all of the blocks and add the origin location to restore their
+            // locations and world UUID
+            structureJson.getJSONArray(BLOCKS).forEach((obj) -> {
+                JSONObject blockJson = (JSONObject) obj;
+                JSONObject pos = blockJson.getJSONObject(POSITION);
+                pos.put(POSITION_X, pos.getInt(POSITION_X) + originLocation.getX());
+                pos.put(POSITION_Y, pos.getInt(POSITION_Y) + originLocation.getY());
+                pos.put(POSITION_Z, pos.getInt(POSITION_Z) + originLocation.getZ());
+                blockJson.put(WORLD_UUID, itemFrameLoc.getExtent().getUniqueId().toString());
 
-            // Deserialize the JSON block into a BlockSnapshot
-                BufferedReader reader = new BufferedReader(new StringReader(blockJson.toString()));
-                JSONConfigurationLoader loader = JSONConfigurationLoader.builder().setSource(() -> {
-                    return reader;
-                }).build();
-                ConfigurationNode node = null;
-                try {
-                    node = loader.load();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                Optional<BlockSnapshot> blockSnapOpt =
-                        Sponge.getDataManager().deserialize(BlockSnapshot.class, ConfigurateTranslator.instance().translateFrom(node));
-                if (!blockSnapOpt.isPresent()) {
-                    plugin.getLogger()
-                            .error("There was an error deserializing to BlockSnapshot for structure with ID " + structureJson.getString(ID));
-                    player.sendMessage(Text.of(TextColors.RED, "There was an error deserializing the structure. Cannot continue"));
-                    return;
-                }
-                BlockSnapshot block = blockSnapOpt.get();
-                Optional<HeldItemProperty> itemEquivalentOpt = block.getProperty(HeldItemProperty.class);
-                ItemType itemType = null;
-                if(itemEquivalentOpt.isPresent()) {
-                	itemType = itemEquivalentOpt.get().getValue();
-                } else if(BLOCK_ITEM_MAP.containsKey(block.getState().getType())) {
-                	itemType = BLOCK_ITEM_MAP.get(block.getState().getType());
-                } else {
-                	return;
-                }
-                String itemId = itemType.getId();
-                if (deserializedStructureBlocks.containsKey(itemId)) {
-                    deserializedStructureBlocks.get(itemId).add(block);
-                } else {
-                    ArrayList<BlockSnapshot> newList = new ArrayList<BlockSnapshot>();
-                    newList.add(block);
-                    deserializedStructureBlocks.put(itemId, newList);
-                }
-            });
-        Structure structure =
-                new Structure(structureJson.getString(NAME), UUID.fromString(structureJson.getString(CREATOR_UUID)), player.getUniqueId(),
-                        Direction.valueOf(structureJson
-                                .getString(DIRECTION)), deserializedStructureBlocks);
+                // Deserialize the JSON block into a BlockSnapshot
+                    BufferedReader reader = new BufferedReader(new StringReader(blockJson.toString()));
+                    JSONConfigurationLoader loader = JSONConfigurationLoader.builder().setSource(() -> {
+                        return reader;
+                    }).build();
+                    ConfigurationNode node = null;
+                    try {
+                        node = loader.load();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    Optional<BlockSnapshot> blockSnapOpt =
+                            Sponge.getDataManager().deserialize(BlockSnapshot.class, ConfigurateTranslator.instance().translateFrom(node));
+                    if (!blockSnapOpt.isPresent()) {
+                        plugin.getLogger()
+                                .error("There was an error deserializing to BlockSnapshot for structure with ID " + structureJson.getString(ID));
+                        player.sendMessage(Text.of(TextColors.RED, "There was an error deserializing the structure. Cannot continue"));
+                        return;
+                    }
+                    BlockSnapshot block = blockSnapOpt.get();
+                    Optional<HeldItemProperty> itemEquivalentOpt = block.getProperty(HeldItemProperty.class);
+                    ItemType itemType = null;
+                    if(itemEquivalentOpt.isPresent()) {
+                    	itemType = itemEquivalentOpt.get().getValue();
+                    } else if(BLOCK_ITEM_MAP.containsKey(block.getState().getType())) {
+                    	itemType = BLOCK_ITEM_MAP.get(block.getState().getType());
+                    } else {
+                    	return;
+                    }
+                    String itemId = itemType.getId();
+                    if (deserializedStructureBlocks.containsKey(itemId)) {
+                        deserializedStructureBlocks.get(itemId).add(block);
+                    } else {
+                        ArrayList<BlockSnapshot> newList = new ArrayList<BlockSnapshot>();
+                        newList.add(block);
+                        deserializedStructureBlocks.put(itemId, newList);
+                    }
+                });
+            Structure structure =
+                    new Structure(structureJson.getString(NAME), UUID.fromString(structureJson.getString(CREATOR_UUID)), player.getUniqueId(),
+                            Direction.valueOf(structureJson
+                                    .getString(DIRECTION)), deserializedStructureBlocks);
 
-        StructureDataManipulatorBuilder builder =
-                (StructureDataManipulatorBuilder) Sponge.getDataManager().getManipulatorBuilder(StructureData.class).get();
-        StructureData data = builder.createFrom(structure);
+            StructureDataManipulatorBuilder builder =
+                    (StructureDataManipulatorBuilder) Sponge.getDataManager().getManipulatorBuilder(StructureData.class).get();
+            StructureData data = builder.createFrom(structure);
 
-        DataTransactionResult result = structureBlock.offer(data);
-        if (!result.isSuccessful()) {
-            player.sendMessage(Text.of(TextColors.RED, "There was an error starting the construction."));
-            return;
-        }
+            DataTransactionResult result = structureBlock.offer(data);
+            if (!result.isSuccessful()) {
+                player.sendMessage(Text.of(TextColors.RED, "There was an error starting the construction."));
+                return;
+            }
 
-        Text msg1 = Text.of(TextColors.GREEN, "You have started the construction of ", TextColors.GOLD, structure.getName());
-        Text msg2 = Text.of(TextColors.GREEN, ".");
+            Text msg1 = Text.of(TextColors.GREEN, "You have started the construction of ", TextColors.GOLD, structure.getName());
+            Text msg2 = Text.of(TextColors.GREEN, ".");
 
-        // If possible, get the creator's name
-        try {
-            GameProfile creatorProfile = Sponge.getServer().getGameProfileManager().get(structure.getCreatorUUID()).get();
-            msg2 = Text.of(TextColors.GREEN, " by ", TextColors.GOLD, creatorProfile.getName().get());
-        } catch (Exception e) {
-        }
+            // If possible, get the creator's name
+            try {
+                GameProfile creatorProfile = Sponge.getServer().getGameProfileManager().get(structure.getCreatorUUID()).get();
+                msg2 = Text.of(TextColors.GREEN, " by ", TextColors.GOLD, creatorProfile.getName().get());
+            } catch (Exception e) {
+            }
 
-        player.sendMessage(Text.of(msg1, msg2));
-        player.sendMessage(Text.of(TextColors.GREEN,
-                "You can right click the chest to see your progress. To begin, throw the necessary materials near the chest."));
-
+            player.sendMessage(Text.of(msg1, msg2));
+            player.sendMessage(Text.of(TextColors.GREEN,
+                    "You can right click the chest to see your progress. To begin, throw the necessary materials near the chest."));
+        });
     }
 
     private void rotateBlocks(JSONArray blocks, int iterations) {
