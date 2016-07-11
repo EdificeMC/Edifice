@@ -214,8 +214,6 @@ public class InteractEntityEventHandler {
                 rotateBlockPosition(blockJson, rotationIterations);
                 restoreBlockLocation(blockJson, originLocation, itemFrameLoc.getExtent().getUniqueId());
                 
-                System.out.println(blockJson.toString());
-                
                 // Deserialize the JSON block into a BlockSnapshot
                 Optional<BlockSnapshot> blockSnapOpt = deserializeBlock(blockJson);
                 
@@ -228,13 +226,7 @@ public class InteractEntityEventHandler {
 				}
 				BlockSnapshot block = blockSnapOpt.get();
 				
-				System.out.println("Deserialized block");
-				System.out.println(block.toString());
-				
 				block = rotateBlockDirectionData(block, rotationIterations);
-				
-				System.out.println("Rotated block");
-				System.out.println(block.toString());
 				
 				Optional<HeldItemProperty> itemEquivalentOpt = block.getProperty(HeldItemProperty.class);
 				ItemType itemType = null;
@@ -254,7 +246,6 @@ public class InteractEntityEventHandler {
 					deserializedStructureBlocks.put(itemId, newList);
                 }
             });
-            System.out.println("Done");
             Structure structure =
                     new Structure(structureJson.getString(NAME), UUID.fromString(structureJson.getString(CREATOR_UUID)), player.getUniqueId(),
                             Direction.valueOf(structureJson
@@ -264,14 +255,12 @@ public class InteractEntityEventHandler {
                     (StructureDataManipulatorBuilder) Sponge.getDataManager().getManipulatorBuilder(StructureData.class).get();
             StructureData data = builder.createFrom(structure);
 
-            System.out.println(1);
             DataTransactionResult result = structureBlock.offer(data);
             if (!result.isSuccessful()) {
                 player.sendMessage(Text.of(TextColors.RED, "There was an error starting the construction."));
                 return;
             }
 
-            System.out.println(2);
             Text msg1 = Text.of(TextColors.GREEN, "You have started the construction of ", TextColors.GOLD, structure.getName());
             Text msg2 = Text.of(TextColors.GREEN, ".");
 
@@ -282,7 +271,6 @@ public class InteractEntityEventHandler {
             } catch (Exception e) {
             }
 
-            System.out.println(3);
             player.sendMessage(Text.of(msg1, msg2));
             player.sendMessage(Text.of(TextColors.GREEN,
                     "You can right click the chest to see your progress. To begin, throw the necessary materials near the chest."));
@@ -327,23 +315,11 @@ public class InteractEntityEventHandler {
     
     private BlockSnapshot rotateBlockDirectionData(BlockSnapshot block, int rotationIterations) {
     	if(!block.get(Keys.DIRECTION).isPresent()) {
-    		System.out.println("No direction");
     		return block;
     	}
     	Direction orig = block.get(Keys.DIRECTION).get();
-    	System.out.println("Original");
-    	System.out.println(orig);
-		int index = -1;
-		if (CARDINAL_SET.indexOf(orig) + rotationIterations >= 4) {
-			index = CARDINAL_SET.size() - CARDINAL_SET.indexOf(orig) - rotationIterations;
-		} else {
-			index = CARDINAL_SET.indexOf(orig) + rotationIterations;
-		}
-		System.out.println("Index");
-		System.out.println(index);
+		int index = (CARDINAL_SET.indexOf(orig) + rotationIterations) % CARDINAL_SET.size();
 		Direction newDir = CARDINAL_SET.get(index);
-		System.out.println("newDir");
-		System.out.println(newDir);
 		return block.with(Keys.DIRECTION, newDir).get();
 	}
 }
