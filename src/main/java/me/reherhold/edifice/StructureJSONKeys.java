@@ -2,8 +2,8 @@ package me.reherhold.edifice;
 
 
 public class StructureJSONKeys {
-    
-    public static final String ID = "_id";
+
+    public static final String ID = "id";
     public static final String NAME = "name";
     public static final String CREATOR_UUID = "creatorUUID";
     public static final String OWNER_UUID = "ownerUUID";
