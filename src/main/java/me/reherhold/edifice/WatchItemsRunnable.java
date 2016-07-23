@@ -15,6 +15,7 @@ import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.world.BlockChangeFlag;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -75,7 +76,7 @@ public class WatchItemsRunnable implements Runnable {
                             for (int i = 0; i < itemStack.getCount(); i++) {
                                 if (blocks.size() > 0) {
                                     BlockSnapshot block = blocks.get(0);
-                                    block.restore(true, false);
+                                    block.restore(true, BlockChangeFlag.NONE);
                                     blocks.remove(block);
                                     itemsFromStackUsed++;
                                     if (blocks.size() == 0) {
