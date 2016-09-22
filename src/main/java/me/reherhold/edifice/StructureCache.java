@@ -10,10 +10,12 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
-
 import org.json.JSONObject;
+
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 
 public class StructureCache {
 	
@@ -40,8 +42,16 @@ public class StructureCache {
 				
 				
 			} else {
-				WebTarget target = Edifice.restClient.target(Edifice.config.getRestURI().toString() + "/structures/" + structureId);
-	            Response response = target.request().get();
+				HttpResponse<JsonNode> response;
+				try {
+					response = Unirest.get(Edifice.config.getRestURI().toString() + "/structures/" + structureId)
+						.asJson();
+				} catch (UnirestException e1) {
+					e1.printStackTrace();
+					return Optional.empty();
+				}
+				
+				
 	            if (response.getStatus() != 200) {
 	            	// Check if there's a cached copy to use
 	            	if(structureFile.exists()) {
@@ -50,7 +60,7 @@ public class StructureCache {
 	            		return Optional.empty();
 	            	}
 	            }
-	            JSONObject structure = new JSONObject(response.readEntity(String.class));
+	            JSONObject structure = response.getBody().getObject();
 	            
 	            try {
 					FileWriter writer = new FileWriter(structureFile);

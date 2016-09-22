@@ -20,11 +20,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.spongepowered.api.Sponge;
@@ -46,6 +41,9 @@ import org.spongepowered.api.world.World;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
 
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
@@ -165,18 +163,19 @@ public class SaveStructureExecutor implements CommandExecutor {
 		}
 
 		public void run() {
-			WebTarget target = Edifice.restClient.target(Edifice.config.getRestURI().toString() + "/structures");
-			Response response;
+			HttpResponse<JsonNode> response;
 			try {
-				response = target.request().post(Entity.entity(structure.toString(), MediaType.APPLICATION_JSON_TYPE));
+				response = Unirest.post(Edifice.config.getRestURI().toString() + "/structures")
+					.body(structure)
+					.asJson();
 			} catch (Exception e) {
 				this.player.sendMessage(Text.of(TextColors.RED, "There was an error uploading your structure."));
 				e.printStackTrace();
 				return;
 			}
 
+			JSONObject responseBody = response.getBody().getObject();
 			if (response.getStatus() == 201) {
-				JSONObject responseBody = new JSONObject(response.readEntity(String.class));
 				String structureID = responseBody.getString(ID);
 				this.player.sendMessage(Text.of(TextColors.GREEN, "You have successfully uploaded ", TextColors.GOLD,
 						structure.getString(NAME), TextColors.GREEN, "."));
@@ -193,7 +192,7 @@ public class SaveStructureExecutor implements CommandExecutor {
 			} else {
 				this.player.sendMessage(
 						Text.of(TextColors.RED, "There was an error uploading your structure. Received status code "
-								+ response.getStatus() + " and response body " + response.getEntity()));
+								+ response.getStatus() + " and response body " + responseBody.toString()));
 			}
 		}
 
