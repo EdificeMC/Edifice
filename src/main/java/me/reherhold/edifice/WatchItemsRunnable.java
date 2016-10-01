@@ -54,7 +54,8 @@ public class WatchItemsRunnable implements Runnable {
                 Vector3i itemBlockPos = item.getLocation().getBlockPosition();
                 for (int x = itemBlockPos.getX() - SEARCH_RADIUS; x <= itemBlockPos.getX() + SEARCH_RADIUS; x++) {
                     for (int y = itemBlockPos.getY() - SEARCH_RADIUS; y <= itemBlockPos.getY() + SEARCH_RADIUS; y++) {
-                        for (int z = itemBlockPos.getZ() - SEARCH_RADIUS; z <= itemBlockPos.getZ() + SEARCH_RADIUS; z++) {
+                        for (int z = itemBlockPos.getZ() - SEARCH_RADIUS; z <= itemBlockPos.getZ()
+                                + SEARCH_RADIUS; z++) {
                             Location<World> loc = new Location<>(item.getLocation().getExtent(), x, y, z);
                             if (!loc.get(EdificeKeys.STRUCTURE).isPresent()) {
                                 continue;
@@ -87,12 +88,14 @@ public class WatchItemsRunnable implements Runnable {
 
                             int itemsLeft = itemStack.getCount() - itemsFromStackUsed;
                             if (itemsLeft > 0) {
-                                ItemStack finalStack = ItemStack.builder().fromSnapshot(itemStack).quantity(itemsLeft).build();
-                                Entity itemToBeSpawned =
-                                        item.getLocation().getExtent().createEntity(EntityTypes.ITEM, item.getLocation().getPosition());
+                                ItemStack finalStack = ItemStack.builder().fromSnapshot(itemStack).quantity(itemsLeft)
+                                        .build();
+                                Entity itemToBeSpawned = item.getLocation().getExtent().createEntity(EntityTypes.ITEM,
+                                        item.getLocation().getPosition());
                                 itemToBeSpawned.offer(Keys.REPRESENTED_ITEM, finalStack.createSnapshot());
-                                item.getLocation().getExtent().spawnEntity(itemToBeSpawned, Cause.source(EntitySpawnCause.builder()
-                                        .entity(itemToBeSpawned).type(SpawnTypes.PLUGIN).build()).build());
+                                item.getLocation().getExtent().spawnEntity(itemToBeSpawned,
+                                        Cause.source(EntitySpawnCause.builder().entity(itemToBeSpawned)
+                                                .type(SpawnTypes.PLUGIN).build()).build());
                             }
                             item.remove();
 
