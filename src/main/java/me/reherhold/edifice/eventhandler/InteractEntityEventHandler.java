@@ -14,16 +14,16 @@ import static me.reherhold.edifice.StructureJSONKeys.POSITION_Z;
 import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
 import static me.reherhold.edifice.StructureJSONKeys.WORLD_UUID;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
+import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import me.reherhold.edifice.Edifice;
+import me.reherhold.edifice.Structure;
+import me.reherhold.edifice.data.EdificeKeys;
+import me.reherhold.edifice.data.structure.StructureData;
+import me.reherhold.edifice.data.structure.StructureDataManipulatorBuilder;
+import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.json.JSONConfigurationLoader;
 import org.json.JSONObject;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -52,24 +52,23 @@ import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
-import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
-import me.reherhold.edifice.Edifice;
-import me.reherhold.edifice.Structure;
-import me.reherhold.edifice.data.EdificeKeys;
-import me.reherhold.edifice.data.structure.StructureData;
-import me.reherhold.edifice.data.structure.StructureDataManipulatorBuilder;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.json.JSONConfigurationLoader;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 public class InteractEntityEventHandler {
 
     private Edifice plugin;
     // Specifically arranged in clockwise direction
     private static final List<Direction> CARDINAL_SET = Lists.newArrayList(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
-    // All of the BlockTypes for which HeldItemProperty does not exist, mapped to what it should be
+    // All of the BlockTypes for which HeldItemProperty does not exist, mapped
+    // to what it should be
     private static final Map<BlockType, ItemType> BLOCK_ITEM_MAP = Maps.newHashMap();
 
     public InteractEntityEventHandler(Edifice plugin) {
@@ -85,14 +84,42 @@ public class InteractEntityEventHandler {
 //        BLOCK_ITEM_MAP.put(BlockTypes.COCOA, ItemTypes.) // TODO No ItemType for cocoa?
         BLOCK_ITEM_MAP.put(BlockTypes.DARK_OAK_DOOR, ItemTypes.DARK_OAK_DOOR);
         BLOCK_ITEM_MAP.put(BlockTypes.DAYLIGHT_DETECTOR_INVERTED, ItemTypes.DAYLIGHT_DETECTOR);
-        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_STONE_SLAB, ItemTypes.STONE_SLAB); // TODO Not double... needs to be fixed
-        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_STONE_SLAB2, ItemTypes.STONE_SLAB2); // TODO Not double... needs to be fixed
-        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_WOODEN_SLAB, ItemTypes.WOODEN_SLAB); // TODO figure out how this works w/ different wood types
-        BLOCK_ITEM_MAP.put(BlockTypes.FIRE, ItemTypes.NONE); // TODO figure out how to deal w/ this
+        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_STONE_SLAB, ItemTypes.STONE_SLAB); // TODO
+                                                                                // Not
+                                                                                // double...
+                                                                                // needs
+                                                                                // to
+                                                                                // be
+                                                                                // fixed
+        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_STONE_SLAB2, ItemTypes.STONE_SLAB2); // TODO
+                                                                                  // Not
+                                                                                  // double...
+                                                                                  // needs
+                                                                                  // to
+                                                                                  // be
+                                                                                  // fixed
+        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_WOODEN_SLAB, ItemTypes.WOODEN_SLAB); // TODO
+                                                                                  // figure
+                                                                                  // out
+                                                                                  // how
+                                                                                  // this
+                                                                                  // works
+                                                                                  // w/
+                                                                                  // different
+                                                                                  // wood
+                                                                                  // types
+        BLOCK_ITEM_MAP.put(BlockTypes.FIRE, ItemTypes.NONE); // TODO figure out
+                                                             // how to deal w/
+                                                             // this
         BLOCK_ITEM_MAP.put(BlockTypes.FLOWER_POT, ItemTypes.FLOWER_POT);
         BLOCK_ITEM_MAP.put(BlockTypes.IRON_DOOR, ItemTypes.IRON_DOOR);
         BLOCK_ITEM_MAP.put(BlockTypes.JUNGLE_DOOR, ItemTypes.JUNGLE_DOOR);
-        BLOCK_ITEM_MAP.put(BlockTypes.LAVA, ItemTypes.LAVA_BUCKET); // TODO make sure the player gets the bucket back
+        BLOCK_ITEM_MAP.put(BlockTypes.LAVA, ItemTypes.LAVA_BUCKET); // TODO make
+                                                                    // sure the
+                                                                    // player
+                                                                    // gets the
+                                                                    // bucket
+                                                                    // back
         BLOCK_ITEM_MAP.put(BlockTypes.LIT_REDSTONE_LAMP, ItemTypes.REDSTONE_LAMP);
         BLOCK_ITEM_MAP.put(BlockTypes.LIT_REDSTONE_ORE, ItemTypes.REDSTONE_ORE);
         BLOCK_ITEM_MAP.put(BlockTypes.MELON_STEM, ItemTypes.MELON_SEEDS);
@@ -149,24 +176,28 @@ public class InteractEntityEventHandler {
             return;
         }
         Edifice.structureCache.getById(blueprintDataOpt.get()).thenAcceptAsync((optStructure) -> {
-        	if(!optStructure.isPresent()) {
-        		return;
-        	}
-        	JSONObject structureJson = optStructure.get();
-        	
-        	int width = structureJson.getInt(WIDTH);
+            if (!optStructure.isPresent()) {
+                return;
+            }
+            JSONObject structureJson = optStructure.get();
+
+            int width = structureJson.getInt(WIDTH);
             int length = structureJson.getInt(LENGTH);
             int height = structureJson.getInt(HEIGHT);
             Location<World> itemFrameLoc = itemFrame.getLocation();
             Direction itemFrameDirection = itemFrame.direction().get();
-            // Vector offset to be added to the item frame location to result in the
+            // Vector offset to be added to the item frame location to result in
+            // the
             // location of the block containing the StructureData
             Vector3i structureBaseOffset = new Vector3i(0, 0, 0);
-            // Vector offset to be added to the item frame location to result in the
+            // Vector offset to be added to the item frame location to result in
+            // the
             // bottom corner of the structure
             Vector3i offset = new Vector3i(0, 0, 0);
-            // For each direction, we will put the block in the opposite direction
-            // as the item frame, since the way the item frame "faces" is the side
+            // For each direction, we will put the block in the opposite
+            // direction
+            // as the item frame, since the way the item frame "faces" is the
+            // side
             // away from the block it is on
             switch (itemFrameDirection) {
                 case NORTH: // Towards negative z
@@ -186,7 +217,7 @@ public class InteractEntityEventHandler {
                     offset = new Vector3i(2, 0, 0);
                     break;
             }
-            Location<World> structureBlock = new Location<World>(itemFrameLoc.getExtent(), itemFrameLoc.getBlockPosition().add(structureBaseOffset));
+            Location<World> structureBlock = new Location<>(itemFrameLoc.getExtent(), itemFrameLoc.getBlockPosition().add(structureBaseOffset));
 
             if (structureBlock.getBlockType() != BlockTypes.CHEST) {
                 return;
@@ -198,58 +229,63 @@ public class InteractEntityEventHandler {
                 return;
             }
 
-            // Difference in indices between the opposite of the way the item frame is facing (the intuitive direction) and the structure direction
-            int directionIndexDifference = CARDINAL_SET.indexOf(itemFrameDirection.getOpposite()) - CARDINAL_SET.indexOf(Direction.valueOf(structureJson.getString(DIRECTION)));
+            // Difference in indices between the opposite of the way the item
+            // frame is facing (the intuitive direction) and the structure
+            // direction
+            int directionIndexDifference = CARDINAL_SET.indexOf(itemFrameDirection.getOpposite())
+                    - CARDINAL_SET.indexOf(Direction.valueOf(structureJson.getString(DIRECTION)));
             int rotationIterations = directionIndexDifference < 0 ? directionIndexDifference + 4 : directionIndexDifference;
 
             Vector3i originLocation = itemFrameLoc.getBlockPosition().add(offset);
 
             // TODO check if the area is clear based on config value
 
-            Map<String, List<BlockSnapshot>> deserializedStructureBlocks = new HashMap<String, List<BlockSnapshot>>();
-            // Take all of the blocks and add the origin location to restore their
+            Map<String, List<BlockSnapshot>> deserializedStructureBlocks = new HashMap<>();
+            // Take all of the blocks and add the origin location to restore
+            // their
             // locations and world UUID
             structureJson.getJSONArray(BLOCKS).forEach((obj) -> {
                 JSONObject blockJson = (JSONObject) obj;
                 rotateBlockPosition(blockJson, rotationIterations);
                 restoreBlockLocation(blockJson, originLocation, itemFrameLoc.getExtent().getUniqueId());
-                
+
                 // Deserialize the JSON block into a BlockSnapshot
                 Optional<BlockSnapshot> blockSnapOpt = deserializeBlock(blockJson);
-                
-				if (!blockSnapOpt.isPresent()) {
-					plugin.getLogger().error("There was an error deserializing to BlockSnapshot for structure with ID "
-							+ structureJson.getString(ID));
-					player.sendMessage(
-							Text.of(TextColors.RED, "There was an error deserializing the structure. Cannot continue"));
-					return;
-				}
-				BlockSnapshot block = blockSnapOpt.get();
-				
-				block = rotateBlockDirectionData(block, rotationIterations);
-				
-				Optional<HeldItemProperty> itemEquivalentOpt = block.getProperty(HeldItemProperty.class);
-				ItemType itemType = null;
-				if (itemEquivalentOpt.isPresent()) {
-					itemType = itemEquivalentOpt.get().getValue();
-				} else if (BLOCK_ITEM_MAP.containsKey(block.getState().getType())) {
-					itemType = BLOCK_ITEM_MAP.get(block.getState().getType());
-				} else {
-					return;
-				}
-				String itemId = itemType.getId();
-				if (deserializedStructureBlocks.containsKey(itemId)) {
-					deserializedStructureBlocks.get(itemId).add(block);
-				} else {
-					ArrayList<BlockSnapshot> newList = new ArrayList<BlockSnapshot>();
-					newList.add(block);
-					deserializedStructureBlocks.put(itemId, newList);
+
+                if (!blockSnapOpt.isPresent()) {
+                    this.plugin.getLogger().error("There was an error deserializing to BlockSnapshot for structure with ID "
+                            + structureJson.getString(ID));
+                    player.sendMessage(
+                            Text.of(TextColors.RED, "There was an error deserializing the structure. Cannot continue"));
+                    return;
+                }
+                BlockSnapshot block = blockSnapOpt.get();
+
+                block = rotateBlockDirectionData(block, rotationIterations);
+
+                Optional<HeldItemProperty> itemEquivalentOpt = block.getProperty(HeldItemProperty.class);
+                ItemType itemType = null;
+                if (itemEquivalentOpt.isPresent()) {
+                    itemType = itemEquivalentOpt.get().getValue();
+                } else if (BLOCK_ITEM_MAP.containsKey(block.getState().getType())) {
+                    itemType = BLOCK_ITEM_MAP.get(block.getState().getType());
+                } else {
+                    return;
+                }
+                String itemId = itemType.getId();
+                if (deserializedStructureBlocks.containsKey(itemId)) {
+                    deserializedStructureBlocks.get(itemId).add(block);
+                } else {
+                    ArrayList<BlockSnapshot> newList = new ArrayList<>();
+                    newList.add(block);
+                    deserializedStructureBlocks.put(itemId, newList);
                 }
             });
             Structure structure =
                     new Structure(structureJson.getString(NAME), UUID.fromString(structureJson.getString(CREATOR_UUID)), player.getUniqueId(),
                             Direction.valueOf(structureJson
-                                    .getString(DIRECTION)), deserializedStructureBlocks);
+                                    .getString(DIRECTION)),
+                            deserializedStructureBlocks);
 
             StructureDataManipulatorBuilder builder =
                     (StructureDataManipulatorBuilder) Sponge.getDataManager().getManipulatorBuilder(StructureData.class).get();
@@ -290,17 +326,17 @@ public class InteractEntityEventHandler {
         }
 
     }
-    
+
     private void restoreBlockLocation(JSONObject block, Vector3i origin, UUID worldUUID) {
-    	JSONObject pos = block.getJSONObject(POSITION);
+        JSONObject pos = block.getJSONObject(POSITION);
         pos.put(POSITION_X, pos.getInt(POSITION_X) + origin.getX());
         pos.put(POSITION_Y, pos.getInt(POSITION_Y) + origin.getY());
         pos.put(POSITION_Z, pos.getInt(POSITION_Z) + origin.getZ());
         block.put(WORLD_UUID, worldUUID.toString());
     }
-    
+
     private Optional<BlockSnapshot> deserializeBlock(JSONObject blockJson) {
-    	BufferedReader reader = new BufferedReader(new StringReader(blockJson.toString()));
+        BufferedReader reader = new BufferedReader(new StringReader(blockJson.toString()));
         JSONConfigurationLoader loader = JSONConfigurationLoader.builder().setSource(() -> {
             return reader;
         }).build();
@@ -312,14 +348,14 @@ public class InteractEntityEventHandler {
         }
         return Sponge.getDataManager().deserialize(BlockSnapshot.class, ConfigurateTranslator.instance().translateFrom(node));
     }
-    
+
     private BlockSnapshot rotateBlockDirectionData(BlockSnapshot block, int rotationIterations) {
-    	if(!block.get(Keys.DIRECTION).isPresent()) {
-    		return block;
-    	}
-    	Direction orig = block.get(Keys.DIRECTION).get();
-		int index = (CARDINAL_SET.indexOf(orig) + rotationIterations) % CARDINAL_SET.size();
-		Direction newDir = CARDINAL_SET.get(index);
-		return block.with(Keys.DIRECTION, newDir).get();
-	}
+        if (!block.get(Keys.DIRECTION).isPresent()) {
+            return block;
+        }
+        Direction orig = block.get(Keys.DIRECTION).get();
+        int index = (CARDINAL_SET.indexOf(orig) + rotationIterations) % CARDINAL_SET.size();
+        Direction newDir = CARDINAL_SET.get(index);
+        return block.with(Keys.DIRECTION, newDir).get();
+    }
 }

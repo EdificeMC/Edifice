@@ -28,23 +28,23 @@ public class Structure implements DataSerializable {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public UUID getCreatorUUID() {
-        return creatorUUID;
+        return this.creatorUUID;
     }
 
     public UUID getOwnerUUID() {
-        return ownerUUID;
+        return this.ownerUUID;
     }
 
     public Direction getDirection() {
-        return direction;
+        return this.direction;
     }
 
     public Map<String, List<BlockSnapshot>> getRemainingBlocks() {
-        return remainingBlocks;
+        return this.remainingBlocks;
     }
 
     @Override

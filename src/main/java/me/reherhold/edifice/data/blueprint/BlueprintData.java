@@ -1,15 +1,14 @@
 package me.reherhold.edifice.data.blueprint;
 
-import org.spongepowered.api.Sponge;
-
 import static me.reherhold.edifice.data.EdificeKeys.BLUEPRINT;
+
+import com.google.common.base.Preconditions;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.manipulator.mutable.common.AbstractSingleData;
 import org.spongepowered.api.data.merge.MergeFunction;
 import org.spongepowered.api.data.value.mutable.Value;
-
-import com.google.common.base.Preconditions;
 
 import java.util.Optional;
 
@@ -57,7 +56,7 @@ public class BlueprintData extends AbstractSingleData<String, BlueprintData, Imm
     protected Value<?> getValueGetter() {
         return Sponge.getRegistry().getValueFactory().createValue(BLUEPRINT, getValue());
     }
-    
+
     @Override
     public DataContainer toContainer() {
         return super.toContainer().set(BLUEPRINT, getValue());

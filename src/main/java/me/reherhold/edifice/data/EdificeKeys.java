@@ -1,7 +1,6 @@
 package me.reherhold.edifice.data;
 
 import me.reherhold.edifice.Structure;
-
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.key.Key;
 import org.spongepowered.api.data.key.KeyFactory;

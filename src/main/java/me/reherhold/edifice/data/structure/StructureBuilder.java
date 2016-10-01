@@ -1,10 +1,10 @@
 package me.reherhold.edifice.data.structure;
 
 import static me.reherhold.edifice.data.structure.StructureDataQueries.BLOCKS;
+import static me.reherhold.edifice.data.structure.StructureDataQueries.CREATOR_UUID;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.DIRECTION;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.NAME;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.OWNER_UUID;
-import static me.reherhold.edifice.data.structure.StructureDataQueries.CREATOR_UUID;
 
 import me.reherhold.edifice.Structure;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -37,7 +37,8 @@ public class StructureBuilder extends AbstractDataBuilder<Structure> {
                     new Structure(container.getString(NAME).get(), UUID.fromString(container.getString(CREATOR_UUID).get()),
                             UUID.fromString(container.getString(OWNER_UUID).get()),
                             Direction.valueOf(container
-                                    .getString(DIRECTION).get()), blockMap);
+                                    .getString(DIRECTION).get()),
+                            blockMap);
             return Optional.of(structure);
         }
         return Optional.empty();

@@ -20,7 +20,6 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,18 +53,18 @@ public class InteractBlockEventHandler {
 
         if (event instanceof InteractBlockEvent.Primary) {
             Location<World> existingRight = this.plugin.getPlayerSelectedLocations().get(player.getUniqueId()).getRight();
-            this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(loc, existingRight));
+            this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<>(loc, existingRight));
             player.sendMessage(Text.of(Constants.SET_FIRST_LOC, TextColors.GOLD, loc.getPosition()));
         } else if (event instanceof InteractBlockEvent.Secondary) {
             Location<World> existingLeft = this.plugin.getPlayerSelectedLocations().get(player.getUniqueId()).getLeft();
-            this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(existingLeft, loc));
+            this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<>(existingLeft, loc));
             player.sendMessage(Text.of(Constants.SET_SECOND_LOC, TextColors.GOLD, loc.getPosition()));
         }
     }
 
     private void handleStructureInfo(InteractBlockEvent.Secondary event, Player player, Location<World> location) {
         Structure structure = location.get(EdificeKeys.STRUCTURE).get();
-        List<Text> materialsNeeded = new ArrayList<Text>();
+        List<Text> materialsNeeded = new ArrayList<>();
         for (String itemId : structure.getRemainingBlocks().keySet()) {
             ItemType itemType = Sponge.getRegistry().getType(ItemType.class, itemId).get();
             materialsNeeded.add(Text.of(TextColors.GREEN, structure.getRemainingBlocks().get(itemId).size(), " ", TextColors.GOLD, itemType

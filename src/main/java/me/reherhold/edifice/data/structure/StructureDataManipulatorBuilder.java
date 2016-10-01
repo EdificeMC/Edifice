@@ -1,6 +1,7 @@
 package me.reherhold.edifice.data.structure;
 
 import static me.reherhold.edifice.data.EdificeKeys.STRUCTURE;
+
 import me.reherhold.edifice.Structure;
 import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.DataView;

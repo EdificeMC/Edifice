@@ -1,6 +1,7 @@
 package me.reherhold.edifice.data.structure;
 
 import static me.reherhold.edifice.data.EdificeKeys.STRUCTURE;
+
 import com.google.common.base.Preconditions;
 import me.reherhold.edifice.Structure;
 import org.spongepowered.api.Sponge;

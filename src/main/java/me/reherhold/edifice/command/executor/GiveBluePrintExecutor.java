@@ -6,11 +6,9 @@ import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
 import static me.reherhold.edifice.StructureJSONKeys.NAME;
 import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
 
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-
+import me.reherhold.edifice.Constants;
+import me.reherhold.edifice.Edifice;
+import me.reherhold.edifice.data.blueprint.BlueprintData;
 import org.json.JSONObject;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -26,9 +24,10 @@ import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import me.reherhold.edifice.Constants;
-import me.reherhold.edifice.Edifice;
-import me.reherhold.edifice.data.blueprint.BlueprintData;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 public class GiveBluePrintExecutor implements CommandExecutor {
 
@@ -38,6 +37,7 @@ public class GiveBluePrintExecutor implements CommandExecutor {
         this.plugin = plugin;
     }
 
+    @Override
     public CommandResult execute(CommandSource source, CommandContext args) throws CommandException {
         if (!(source instanceof Player)) {
             source.sendMessage(Constants.MUST_BE_PLAYER);
@@ -63,16 +63,17 @@ public class GiveBluePrintExecutor implements CommandExecutor {
             this.structureID = structureID;
         }
 
+        @Override
         public void run() {
-        	Optional<JSONObject> structureOpt = Optional.empty();
-			try {
-				structureOpt = Edifice.structureCache.getById(this.structureID).get();
-			} catch (InterruptedException | ExecutionException e1) {
-				e1.printStackTrace();
-			}
-			
+            Optional<JSONObject> structureOpt = Optional.empty();
+            try {
+                structureOpt = Edifice.structureCache.getById(this.structureID).get();
+            } catch (InterruptedException | ExecutionException e1) {
+                e1.printStackTrace();
+            }
+
             if (!structureOpt.isPresent()) {
-                player.sendMessage(Text.of(TextColors.RED, "Could not find a structure with ID " + structureID));
+                this.player.sendMessage(Text.of(TextColors.RED, "Could not find a structure with ID " + this.structureID));
                 return;
             }
             JSONObject structure = structureOpt.get();
@@ -97,7 +98,7 @@ public class GiveBluePrintExecutor implements CommandExecutor {
                                             " x ", TextColors.GOLD, structure.getInt(LENGTH), TextColors.GREEN, " x ", TextColors.GOLD,
                                             structure.getInt(HEIGHT), TextColors.GREEN, " area.")))
                     .build();
-            player.getInventory().offer(blueprint);
+            this.player.getInventory().offer(blueprint);
 
         }
 

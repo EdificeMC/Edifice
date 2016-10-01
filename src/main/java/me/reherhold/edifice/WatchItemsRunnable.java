@@ -1,14 +1,13 @@
 package me.reherhold.edifice;
 
-import org.spongepowered.api.data.key.Keys;
-
-import org.spongepowered.api.entity.EntityTypes;
 import com.flowpowered.math.vector.Vector3i;
 import me.reherhold.edifice.data.EdificeKeys;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockType;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.Item;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
@@ -56,7 +55,7 @@ public class WatchItemsRunnable implements Runnable {
                 for (int x = itemBlockPos.getX() - SEARCH_RADIUS; x <= itemBlockPos.getX() + SEARCH_RADIUS; x++) {
                     for (int y = itemBlockPos.getY() - SEARCH_RADIUS; y <= itemBlockPos.getY() + SEARCH_RADIUS; y++) {
                         for (int z = itemBlockPos.getZ() - SEARCH_RADIUS; z <= itemBlockPos.getZ() + SEARCH_RADIUS; z++) {
-                            Location<World> loc = new Location<World>(item.getLocation().getExtent(), x, y, z);
+                            Location<World> loc = new Location<>(item.getLocation().getExtent(), x, y, z);
                             if (!loc.get(EdificeKeys.STRUCTURE).isPresent()) {
                                 continue;
                             }
@@ -92,7 +91,7 @@ public class WatchItemsRunnable implements Runnable {
                                 Entity itemToBeSpawned =
                                         item.getLocation().getExtent().createEntity(EntityTypes.ITEM, item.getLocation().getPosition()).get();
                                 itemToBeSpawned.offer(Keys.REPRESENTED_ITEM, finalStack.createSnapshot());
-                                item.getLocation().getExtent().spawnEntity(itemToBeSpawned,  Cause.source(EntitySpawnCause.builder()
+                                item.getLocation().getExtent().spawnEntity(itemToBeSpawned, Cause.source(EntitySpawnCause.builder()
                                         .entity(itemToBeSpawned).type(SpawnTypes.PLUGIN).build()).build());
                             }
                             item.remove();

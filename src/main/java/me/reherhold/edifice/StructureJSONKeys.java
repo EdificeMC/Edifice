@@ -1,6 +1,5 @@
 package me.reherhold.edifice;
 
-
 public class StructureJSONKeys {
 
     public static final String ID = "id";

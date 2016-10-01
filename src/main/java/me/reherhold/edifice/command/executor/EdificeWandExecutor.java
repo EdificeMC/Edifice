@@ -17,6 +17,7 @@ public class EdificeWandExecutor implements CommandExecutor {
         this.plugin = plugin;
     }
 
+    @Override
     public CommandResult execute(CommandSource source, CommandContext arg1) throws CommandException {
         if (!(source instanceof Player)) {
             source.sendMessage(Constants.MUST_BE_PLAYER);
