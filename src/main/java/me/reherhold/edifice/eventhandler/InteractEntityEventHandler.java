@@ -31,8 +31,8 @@ import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.DataTransactionResult;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.persistence.DataTranslators;
 import org.spongepowered.api.data.property.block.HeldItemProperty;
-import org.spongepowered.api.data.translator.ConfigurateTranslator;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.hanging.ItemFrame;
@@ -81,45 +81,23 @@ public class InteractEntityEventHandler {
         BLOCK_ITEM_MAP.put(BlockTypes.CAKE, ItemTypes.CAKE);
         BLOCK_ITEM_MAP.put(BlockTypes.CARROTS, ItemTypes.CARROT);
         BLOCK_ITEM_MAP.put(BlockTypes.CAULDRON, ItemTypes.CAULDRON);
-//        BLOCK_ITEM_MAP.put(BlockTypes.COCOA, ItemTypes.) // TODO No ItemType for cocoa?
+        // TODO No ItemType for cocoa?
+//        BLOCK_ITEM_MAP.put(BlockTypes.COCOA, ItemTypes.)
         BLOCK_ITEM_MAP.put(BlockTypes.DARK_OAK_DOOR, ItemTypes.DARK_OAK_DOOR);
         BLOCK_ITEM_MAP.put(BlockTypes.DAYLIGHT_DETECTOR_INVERTED, ItemTypes.DAYLIGHT_DETECTOR);
-        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_STONE_SLAB, ItemTypes.STONE_SLAB); // TODO
-                                                                                // Not
-                                                                                // double...
-                                                                                // needs
-                                                                                // to
-                                                                                // be
-                                                                                // fixed
-        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_STONE_SLAB2, ItemTypes.STONE_SLAB2); // TODO
-                                                                                  // Not
-                                                                                  // double...
-                                                                                  // needs
-                                                                                  // to
-                                                                                  // be
-                                                                                  // fixed
-        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_WOODEN_SLAB, ItemTypes.WOODEN_SLAB); // TODO
-                                                                                  // figure
-                                                                                  // out
-                                                                                  // how
-                                                                                  // this
-                                                                                  // works
-                                                                                  // w/
-                                                                                  // different
-                                                                                  // wood
-                                                                                  // types
-        BLOCK_ITEM_MAP.put(BlockTypes.FIRE, ItemTypes.NONE); // TODO figure out
-                                                             // how to deal w/
-                                                             // this
+        // TODO Not double... needs to be fixed
+        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_STONE_SLAB, ItemTypes.STONE_SLAB);
+        // TODO Not double... needs to be fixed
+        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_STONE_SLAB2, ItemTypes.STONE_SLAB2);
+        // TODO figure out how this works w/ different wood types
+        BLOCK_ITEM_MAP.put(BlockTypes.DOUBLE_WOODEN_SLAB, ItemTypes.WOODEN_SLAB);
+        // TODO figure out how to deal w/ this
+        BLOCK_ITEM_MAP.put(BlockTypes.FIRE, ItemTypes.NONE);
         BLOCK_ITEM_MAP.put(BlockTypes.FLOWER_POT, ItemTypes.FLOWER_POT);
         BLOCK_ITEM_MAP.put(BlockTypes.IRON_DOOR, ItemTypes.IRON_DOOR);
         BLOCK_ITEM_MAP.put(BlockTypes.JUNGLE_DOOR, ItemTypes.JUNGLE_DOOR);
-        BLOCK_ITEM_MAP.put(BlockTypes.LAVA, ItemTypes.LAVA_BUCKET); // TODO make
-                                                                    // sure the
-                                                                    // player
-                                                                    // gets the
-                                                                    // bucket
-                                                                    // back
+        // TODO make sure the player gets the bucket back
+        BLOCK_ITEM_MAP.put(BlockTypes.LAVA, ItemTypes.LAVA_BUCKET);
         BLOCK_ITEM_MAP.put(BlockTypes.LIT_REDSTONE_LAMP, ItemTypes.REDSTONE_LAMP);
         BLOCK_ITEM_MAP.put(BlockTypes.LIT_REDSTONE_ORE, ItemTypes.REDSTONE_ORE);
         BLOCK_ITEM_MAP.put(BlockTypes.MELON_STEM, ItemTypes.MELON_SEEDS);
@@ -346,7 +324,7 @@ public class InteractEntityEventHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return Sponge.getDataManager().deserialize(BlockSnapshot.class, ConfigurateTranslator.instance().translateFrom(node));
+        return Sponge.getDataManager().deserialize(BlockSnapshot.class, DataTranslators.CONFIGURATION_NODE.translate(node));
     }
 
     private BlockSnapshot rotateBlockDirectionData(BlockSnapshot block, int rotationIterations) {

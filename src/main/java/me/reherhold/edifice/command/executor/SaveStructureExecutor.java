@@ -22,7 +22,6 @@ import com.mashape.unirest.http.Unirest;
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
 import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.SimpleConfigurationNode;
 import ninja.leaping.configurate.json.JSONConfigurationLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,7 +33,7 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
-import org.spongepowered.api.data.translator.ConfigurateTranslator;
+import org.spongepowered.api.data.persistence.DataTranslators;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
@@ -127,8 +126,7 @@ public class SaveStructureExecutor implements CommandExecutor {
                     if (block.getState().getType() == BlockTypes.AIR) {
                         continue;
                     }
-                    ConfigurationNode node = SimpleConfigurationNode.root();
-                    ConfigurateTranslator.instance().translateContainerToData(node, block.toContainer());
+                    ConfigurationNode node = DataTranslators.CONFIGURATION_NODE.translate(block.toContainer());
                     try {
                         JSONConfigurationLoader.builder().build().saveInternal(node, writer);
                     } catch (IOException e) {

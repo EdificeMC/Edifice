@@ -89,7 +89,7 @@ public class WatchItemsRunnable implements Runnable {
                             if (itemsLeft > 0) {
                                 ItemStack finalStack = ItemStack.builder().fromSnapshot(itemStack).quantity(itemsLeft).build();
                                 Entity itemToBeSpawned =
-                                        item.getLocation().getExtent().createEntity(EntityTypes.ITEM, item.getLocation().getPosition()).get();
+                                        item.getLocation().getExtent().createEntity(EntityTypes.ITEM, item.getLocation().getPosition());
                                 itemToBeSpawned.offer(Keys.REPRESENTED_ITEM, finalStack.createSnapshot());
                                 item.getLocation().getExtent().spawnEntity(itemToBeSpawned, Cause.source(EntitySpawnCause.builder()
                                         .entity(itemToBeSpawned).type(SpawnTypes.PLUGIN).build()).build());

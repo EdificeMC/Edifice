@@ -48,11 +48,6 @@ public class BlueprintData extends AbstractSingleData<String, BlueprintData, Imm
     }
 
     @Override
-    public int compareTo(BlueprintData other) {
-        return getValue().compareTo(other.getValue());
-    }
-
-    @Override
     protected Value<?> getValueGetter() {
         return Sponge.getRegistry().getValueFactory().createValue(BLUEPRINT, getValue());
     }

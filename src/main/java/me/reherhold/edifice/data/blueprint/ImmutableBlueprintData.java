@@ -13,11 +13,6 @@ public class ImmutableBlueprintData extends AbstractImmutableSingleData<String, 
     }
 
     @Override
-    public int compareTo(ImmutableBlueprintData other) {
-        return this.getValue().compareTo(other.getValue());
-    }
-
-    @Override
     public int getContentVersion() {
         return 1;
     }

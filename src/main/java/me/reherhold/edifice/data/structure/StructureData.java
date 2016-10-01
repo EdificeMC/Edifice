@@ -49,11 +49,6 @@ public class StructureData extends AbstractSingleData<Structure, StructureData, 
     }
 
     @Override
-    public int compareTo(StructureData arg0) {
-        return 0;
-    }
-
-    @Override
     protected Value<Structure> getValueGetter() {
         return Sponge.getRegistry().getValueFactory().createValue(STRUCTURE, getValue(), getValue());
     }

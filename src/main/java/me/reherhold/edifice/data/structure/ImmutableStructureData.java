@@ -27,11 +27,6 @@ public class ImmutableStructureData extends AbstractImmutableSingleData<Structur
     }
 
     @Override
-    public int compareTo(ImmutableStructureData arg0) {
-        return 0;
-    }
-
-    @Override
     public int getContentVersion() {
         return 1;
     }
