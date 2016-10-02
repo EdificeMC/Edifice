@@ -48,7 +48,7 @@ import java.util.UUID;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
-@Plugin(id = PomData.ARTIFACT_ID, name = PomData.NAME, version = PomData.VERSION)
+@Plugin(id = "edifice")
 public class Edifice {
 
     @Inject @ConfigDir(sharedRoot = false) private Path configDir;

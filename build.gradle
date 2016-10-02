@@ -1,0 +1,46 @@
+plugins {
+	id 'java'
+	id 'maven'
+	id 'com.github.johnrengelman.shadow' version '1.2.3'
+	id 'org.spongepowered.plugin' version '0.6'
+}
+
+sponge {
+    plugin {
+        id = 'edifice'
+		meta {
+			name = 'Edifice'
+			url = 'https://www.edificemc.com/'
+			authors = ['Robert Herhold']
+		}
+    }
+}
+
+group = 'me.reherhold'
+version = '1.0.7'
+description = 'Create and share structures with the community'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+repositories {
+    mavenCentral()
+    maven { url "http://repo.spongepowered.org/maven/" }
+}
+
+dependencies {
+    compile 'org.spongepowered:spongeapi:5.0.0-SNAPSHOT'
+    compile 'ninja.leaping.configurate:configurate-json:3.1.1'
+    compile 'com.mashape.unirest:unirest-java:1.4.9'
+}
+
+shadowJar {
+    dependencies {
+        exclude(dependency('org.spongepowered:spongeapi:5.0.0-SNAPSHOT'))
+    }
+}
+
+artifacts {
+    archives shadowJar
+}
