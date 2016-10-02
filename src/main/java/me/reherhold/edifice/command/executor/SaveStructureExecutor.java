@@ -1,6 +1,7 @@
 package me.reherhold.edifice.command.executor;
 
 import static me.reherhold.edifice.StructureJSONKeys.CREATOR_UUID;
+import static me.reherhold.edifice.StructureJSONKeys.ID;
 import static me.reherhold.edifice.StructureJSONKeys.NAME;
 import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
 
@@ -9,6 +10,7 @@ import com.flowpowered.math.vector.Vector3i;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.request.body.RequestBodyEntity;
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
 import org.apache.http.entity.ContentType;
@@ -19,11 +21,13 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.persistence.DataFormats;
 import org.spongepowered.api.data.persistence.DataTranslators;
 import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.util.Direction.Division;
@@ -35,7 +39,10 @@ import org.spongepowered.api.world.schematic.Schematic;
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.UUID;
+import java.util.zip.GZIPOutputStream;
 
 public class SaveStructureExecutor implements CommandExecutor {
 
@@ -143,17 +150,17 @@ public class SaveStructureExecutor implements CommandExecutor {
 
             new Thread(() -> {
                 try {
-                    DataFormats.NBT.writeTo(out, DataTranslators.SCHEMATIC.translate(this.schematic));
+                    DataFormats.NBT.writeTo(new GZIPOutputStream(out), DataTranslators.SCHEMATIC.translate(this.schematic));
                 } catch (InvalidDataException | IOException e1) {
                     e1.printStackTrace();
                 }
             }).start();
 
-            HttpResponse<JsonNode> response;
+            // Upload the schematic
+            HttpResponse<JsonNode> schematicResponse;
             try {
-                response = Unirest.post(Edifice.config.getRestURI().toString() + "/structures")
-                        // .body(structure)
-                        .field("schematic", in, ContentType.APPLICATION_OCTET_STREAM, "schematic.nbt")
+                schematicResponse = Unirest.post(Edifice.config.getRestURI().toString() + "/schematic")
+                        .field("schematic", in, ContentType.APPLICATION_OCTET_STREAM, "schematic.dat")
                         .asJson();
             } catch (Exception e) {
                 this.player.sendMessage(Text.of(TextColors.RED, "There was an error uploading your structure."));
@@ -161,27 +168,58 @@ public class SaveStructureExecutor implements CommandExecutor {
                 return;
             }
 
-            JSONObject responseBody = response.getBody().getObject();
-            System.out.println(responseBody);
-//			if (response.getStatus() == 201) {
-//				String structureID = responseBody.getString(ID);
-//				this.player.sendMessage(Text.of(TextColors.GREEN, "You have successfully uploaded ", TextColors.GOLD,
-//						structure.getString(NAME), TextColors.GREEN, "."));
-//				try {
-//					this.player.sendMessage(Text.of(TextColors.GREEN, "Click ",
-//							Text.builder("here").color(TextColors.GOLD)
-//									.onClick(TextActions.openUrl(
-//											new URL(Edifice.config.getWebURI().toString() + "/create/" + structureID)))
-//									.build(),
-//							TextColors.GREEN, " to finalize it with a screenshot."));
-//				} catch (MalformedURLException e) {
-//					e.printStackTrace();
-//				}
-//			} else {
-//				this.player.sendMessage(
-//						Text.of(TextColors.RED, "There was an error uploading your structure. Received status code "
-//								+ response.getStatus() + " and response body " + responseBody.toString()));
-//			}
+            JSONObject schematicResponseBody = schematicResponse.getBody().getObject();
+            if (schematicResponse.getStatus() != 201) {
+                this.player.sendMessage(
+                        Text.of(TextColors.RED, "There was an error uploading your structure. Received status code "
+                                + schematicResponse.getStatus() + " and response body " + schematicResponseBody.toString()));
+                return;
+            }
+
+            // Upload the structure w/ the newly uploaded schematic URL
+            final String schematicUrl = schematicResponseBody.getString("url");
+            structure.put("schematic", schematicUrl);
+            System.out.println(structure);
+
+            HttpResponse<JsonNode> structureResponse;
+            try {
+                RequestBodyEntity body = Unirest.post(Edifice.config.getRestURI().toString() + "/structures/")
+                        .header("Content-Type", "application/json")
+                        .body(structure);
+                System.out.println("entity");
+                System.out.println(body.getEntity());
+                System.out.println("http req");
+                System.out.println(body.getHttpRequest());
+                System.out.println("body");
+                System.out.println(body.getBody());
+                structureResponse = body.asJson();
+            } catch (Exception e) {
+                this.player.sendMessage(Text.of(TextColors.RED, "There was an error uploading your structure."));
+                e.printStackTrace();
+                return;
+            }
+            
+            JSONObject structureResponseBody = structureResponse.getBody().getObject();
+            if (structureResponse.getStatus() != 201) {
+                this.player.sendMessage(
+                        Text.of(TextColors.RED, "There was an error uploading your structure. Received status code "
+                                + structureResponse.getStatus() + " and response body " + structureResponseBody.toString()));
+                return;
+            }
+            
+            String structureID = structureResponseBody.getString(ID);
+            this.player.sendMessage(Text.of(TextColors.GREEN, "You have successfully uploaded ", TextColors.GOLD,
+                    structure.getString(NAME), TextColors.GREEN, "."));
+            try {
+                this.player.sendMessage(Text.of(TextColors.GREEN, "Click ",
+                        Text.builder("here").color(TextColors.GOLD)
+                                .onClick(TextActions.openUrl(
+                                        new URL(Edifice.config.getWebURI().toString() + "/create/" + structureID)))
+                                .build(),
+                        TextColors.GREEN, " to finalize it with a screenshot."));
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
         }
 
     }
