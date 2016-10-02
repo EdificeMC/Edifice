@@ -1,5 +1,6 @@
 package me.reherhold.edifice;
 
+import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.google.inject.Inject;
 import com.mashape.unirest.http.Unirest;
 import me.reherhold.edifice.command.executor.EdificeWandExecutor;
@@ -22,6 +23,7 @@ import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.args.GenericArguments;
@@ -34,6 +36,7 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.schematic.Schematic;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +46,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.net.ssl.SSLContext;
@@ -58,13 +62,15 @@ public class Edifice {
     public static EdificeConfiguration config;
     private HashMap<UUID, Boolean> playerWandActivationStates;
     private HashMap<UUID, Pair<Location<World>, Location<World>>> playerSelectedLocations;
-    public static StructureCache structureCache;
+    public static AsyncLoadingCache<String, Optional<JSONObject>> structureCache;
+    public static AsyncLoadingCache<String, Optional<Schematic>> schematicCache;
 
     @Listener
     public void preInit(GamePreInitializationEvent event) {
         this.playerWandActivationStates = new HashMap<>();
         this.playerSelectedLocations = new HashMap<>();
-        Edifice.structureCache = new StructureCache(this.configDir.resolve("structures"));
+        Edifice.structureCache = EdificeCache.createStructureCache(this.configDir.resolve("structures"));
+        Edifice.schematicCache = EdificeCache.createSchematicCache(this.configDir.resolve("schematics"));
         try {
             setupRestClient();
         } catch (KeyManagementException | NoSuchAlgorithmException e) {
