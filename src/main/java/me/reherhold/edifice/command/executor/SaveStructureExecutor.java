@@ -1,6 +1,7 @@
 package me.reherhold.edifice.command.executor;
 
 import static me.reherhold.edifice.StructureJSONKeys.ID;
+import static me.reherhold.edifice.StructureJSONKeys.NAME;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
@@ -17,7 +18,6 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
-import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.persistence.DataFormats;
 import org.spongepowered.api.data.persistence.DataTranslators;
 import org.spongepowered.api.data.persistence.InvalidDataException;
@@ -27,7 +27,6 @@ import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.util.Direction.Division;
-import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.extent.ArchetypeVolume;
 import org.spongepowered.api.world.schematic.BlockPaletteTypes;
 import org.spongepowered.api.world.schematic.Schematic;
@@ -64,7 +63,6 @@ public class SaveStructureExecutor implements CommandExecutor {
             return CommandResult.empty();
         }
 
-        World world = this.plugin.getPlayerSelectedLocations().get(uuid).getLeft().getExtent();
         Vector3i loc1 = this.plugin.getPlayerSelectedLocations().get(uuid).getLeft().getBlockPosition();
         Vector3i loc2 = this.plugin.getPlayerSelectedLocations().get(uuid).getRight().getBlockPosition();
 
@@ -166,9 +164,8 @@ public class SaveStructureExecutor implements CommandExecutor {
             }
 
             final String structureID = responseBody.getString(ID);
-            final String structureName = this.schematic.getMetadata().getString(DataQuery.of(Schematic.METADATA_NAME)).get();
             this.player.sendMessage(Text.of(TextColors.GREEN, "You have successfully uploaded ", TextColors.GOLD,
-                    structureName, TextColors.GREEN, "."));
+                    responseBody.getString(NAME), TextColors.GREEN, "."));
             try {
                 this.player.sendMessage(Text.of(TextColors.GREEN, "Click ",
                         Text.builder("here").color(TextColors.GOLD)
