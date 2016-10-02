@@ -17,7 +17,7 @@ sponge {
 }
 
 group = 'me.reherhold'
-version = '1.0.7'
+version = '1.0.8'
 description = 'Create and share structures with the community'
 
 sourceCompatibility = 1.8
