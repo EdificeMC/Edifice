@@ -33,6 +33,7 @@ import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -217,6 +218,10 @@ public class Edifice {
             return this.playerWandActivationStates.get(uuid);
         }
         return false;
+    }
+    
+    public static PluginContainer getContainer() {
+        return Sponge.getPluginManager().getPlugin("edifice").get();
     }
 
 }
