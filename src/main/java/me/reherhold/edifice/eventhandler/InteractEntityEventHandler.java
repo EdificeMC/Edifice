@@ -34,7 +34,9 @@ import org.spongepowered.api.world.BlockChangeFlag;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.extent.ArchetypeVolume;
+import org.spongepowered.api.world.extent.BlockVolume;
 import org.spongepowered.api.world.extent.MutableBlockVolume;
+import org.spongepowered.api.world.extent.worker.procedure.BlockVolumeVisitor;
 import org.spongepowered.api.world.schematic.Schematic;
 
 import java.util.List;
@@ -106,38 +108,31 @@ public class InteractEntityEventHandler {
     @SuppressWarnings("incomplete-switch")
     @Listener(order = Order.LAST)
     public void interactEntity(InteractEntityEvent.Secondary event, @Root Player player) {
-        System.out.println(1);
         if (event.isCancelled()) {
             return;
         }
-        System.out.println(2);
         Entity entity = event.getTargetEntity();
         if (!(entity instanceof ItemFrame)) {
             return;
         }
-        System.out.println(3);
         ItemFrame itemFrame = (ItemFrame) entity;
         Optional<ItemStackSnapshot> itemStackSnapshotOpt = itemFrame.get(Keys.REPRESENTED_ITEM);
         if (itemStackSnapshotOpt.isPresent()) {
             return;
         }
-        System.out.println(4);
         // At this point, there is nothing in the item frame and the event has
-        // not been cancelled,
-        // so it is almost certain that whatever item that is being placed will
-        // end up in the frame
+        // not been cancelled, so it is almost certain that whatever item that
+        // is being placed will end up in the frame
 
         Optional<ItemStack> itemOpt = player.getItemInHand(HandTypes.MAIN_HAND);
         if (!itemOpt.isPresent()) {
             return;
         }
-        System.out.println(5);
         ItemStack item = itemOpt.get();
         Optional<String> structureIdOpt = item.get(EdificeKeys.BLUEPRINT);
         if (!structureIdOpt.isPresent()) {
             return;
         }
-        System.out.println(6);
         Edifice.schematicCache.get(structureIdOpt.get()).thenAcceptAsync((optSchematic) -> {
             if (!optSchematic.isPresent()) {
                 return;
@@ -148,111 +143,86 @@ public class InteractEntityEventHandler {
             Location<World> itemFrameLoc = itemFrame.getLocation();
             Direction itemFrameDirection = itemFrame.direction().get();
             // Vector offset to be added to the item frame location to result in
-            // the
-            // location of the block containing the StructureData
-            Vector3i structureBaseOffset = new Vector3i(0, 0, 0);
+            // the location of the block containing the StructureData
+            Vector3i chestTranslation = new Vector3i(0, 0, 0);
             // Vector offset to be added to the item frame location to result in
-            // the
-            // bottom corner of the structure
-            Vector3i offset = new Vector3i(0, 0, 0);
+            // the bottom corner of the structure
+            Vector3i structureOriginTranslation = new Vector3i(0, 0, 0);
             // For each direction, we will put the block in the opposite
-            // direction
-            // as the item frame, since the way the item frame "faces" is the
-            // side
-            // away from the block it is on
+            // direction as the item frame, since the way the item frame "faces"
+            // is the side away from the block it is on
             switch (itemFrameDirection) {
                 case NORTH: // Towards negative z
-                    structureBaseOffset = new Vector3i(0, 0, 1);
-                    offset = new Vector3i(0, 0, 2);
+                    chestTranslation = new Vector3i(0, 0, 1);
+                    structureOriginTranslation = new Vector3i(0, 0, 2);
                     break;
                 case EAST: // Towards positive x
-                    structureBaseOffset = new Vector3i(-1, 0, 0);
-                    offset = new Vector3i(-2, 0, 0);
+                    chestTranslation = new Vector3i(-1, 0, 0);
+                    structureOriginTranslation = new Vector3i(-2, 0, 0);
                     break;
                 case SOUTH: // Towards positive z
-                    structureBaseOffset = new Vector3i(0, 0, -1);
-                    offset = new Vector3i(0, 0, -2);
+                    chestTranslation = new Vector3i(0, 0, -1);
+                    structureOriginTranslation = new Vector3i(0, 0, -2);
                     break;
                 case WEST: // Towards negative x
-                    structureBaseOffset = new Vector3i(1, 0, 0);
-                    offset = new Vector3i(2, 0, 0);
+                    chestTranslation = new Vector3i(1, 0, 0);
+                    structureOriginTranslation = new Vector3i(2, 0, 0);
                     break;
             }
-            Location<World> structureBlock = new Location<World>(itemFrameLoc.getExtent(), itemFrameLoc.getBlockPosition().add(structureBaseOffset));
+            Location<World> structureBlock = new Location<World>(itemFrameLoc.getExtent(), itemFrameLoc.getBlockPosition().add(chestTranslation));
 
             if (structureBlock.getBlockType() != BlockTypes.CHEST) {
                 return;
             }
-            System.out.println(8);
             if (structureBlock.get(EdificeKeys.STRUCTURE).isPresent()) {
                 player.sendMessage(Text.of(TextColors.RED, "There is already a structure in progress here!"));
                 event.setCancelled(true);
                 return;
             }
-            System.out.println(9);
             DataView metadata = schematic.getMetadata().getView(DataQuery.of(".")).get();
 
             // Difference in indices between the opposite of the way the item
             // frame is facing (the intuitive direction) and the structure
             // direction
-            int directionIndexDifference = CARDINAL_SET.indexOf(itemFrameDirection.getOpposite())
-                    - CARDINAL_SET.indexOf(Direction.valueOf(metadata.getString(DataQuery.of("Direction")).get()));
+            int directionIndexDifference = CARDINAL_SET.indexOf(Direction.valueOf(metadata.getString(DataQuery.of("Direction")).get()))
+                    - CARDINAL_SET.indexOf(itemFrameDirection.getOpposite());
             int quarterTurns = directionIndexDifference < 0 ? directionIndexDifference + 4 : directionIndexDifference;
-
-            System.out.println("Rotation iterations: " + quarterTurns);
 
             // TODO check if the area is clear based on config value
 
-            ArchetypeVolume archetypeVolume = schematic;
+            MutableBlockVolume volume = schematic;
             if (quarterTurns != 0) {
-                System.out.println(10);
-                Vector3i size = schematic.getBlockMax().sub(schematic.getBlockMin()).add(Vector3i.ONE);
-                if (quarterTurns == 1 || quarterTurns == 3) {
-                    size = new Vector3i(size.getZ(), size.getY(), size.getX());
-                }
-                System.out.println(11);
-
-//                final ArchetypeVolume constructedVolume = Sponge.getRegistry().getExtentBufferFactory().createArchetypeVolume(size);
-                System.out.println(12);
                 DiscreteTransform3 rotationTransform = DiscreteTransform3.fromRotation(quarterTurns, Axis.Y);
-                MutableBlockVolume rotatedVolume = schematic.getBlockView(rotationTransform);
-                System.out.println(schematic);
-                System.out.println(rotatedVolume);
-//                DiscreteTransform3.fromRotation(quarterTurns, axis, point, blockCorner) TODO do this
-//                schematic.getRelativeBlockView().getBlockWorker(Cause.source(this).build()).iterate(new BlockVolumeVisitor() {
-//
-//                    @Override
-//                    public void visit(BlockVolume volume, int x, int y, int z) {
-//                        try {
-//                            System.out.println(x);
-//                            System.out.println(y);
-//                            System.out.println(z);
-//                            Vector3i destination = new Vector3i(z, y, x);
-////                            for (int i = 0; i < rotationIterations; i++) {
-////                                destination = new Vector3i(destination.getZ(), destination.getY(), -destination.getX());
-////                            }
-////                            if (rotationIterations == 1 || rotationIterations == 3) {
-////                                destination.mul(-1, 1, -1);
-////                            }
-//
-//                            constructedVolume.setBlock(destination, volume.getBlock(x, y, z), Cause.source(this).build());
-//                        } catch (Exception e) {
-//                            System.out.println(e);
-//                            e.printStackTrace(System.out);
-//                        }
-//
-//                    }
-//                });
-                System.out.println(13);
-//                archetypeVolume = constructedVolume;
+                volume = schematic.getBlockView(rotationTransform);
+            }
+            Vector3i size = volume.getBlockMax().sub(volume.getBlockMin()).add(Vector3i.ONE);
+            switch (itemFrameDirection.getOpposite()) {
+                case NORTH:
+                    structureOriginTranslation = structureOriginTranslation.add(0, 0, -size.getZ() + 1);
+                    break;
+                case EAST:
+                    structureOriginTranslation = structureOriginTranslation.add(0, 0, 0);
+                    break;
+                case SOUTH:
+                    structureOriginTranslation = structureOriginTranslation.add(-size.getX() + 1, 0, 0);
+                    break;
+                case WEST:
+                    structureOriginTranslation = structureOriginTranslation.add(-size.getX() + 1, 0, -size.getZ() + 1);
+                    break;
             }
 
-            final ArchetypeVolume archetypeVolumeRef = archetypeVolume;
-            System.out.println("scheduling");
+            final ArchetypeVolume archetypeVolume = Sponge.getRegistry().getExtentBufferFactory().createArchetypeVolume(size);
+            volume.getRelativeBlockView().getBlockWorker(Cause.source(this).build()).iterate(new BlockVolumeVisitor() {
 
-            Vector3i originLocation = itemFrameLoc.getBlockPosition().add(offset);
+                @Override
+                public void visit(BlockVolume volume, int x, int y, int z) {
+                    archetypeVolume.setBlock(x, y, z, volume.getBlock(x, y, z), Cause.source(this).build());
+                }
+            });
+
+            Vector3i originLocation = itemFrameLoc.getBlockPosition().add(structureOriginTranslation);
             Sponge.getScheduler().createTaskBuilder()
-                    .execute(() -> archetypeVolumeRef.apply(new Location<World>(itemFrameLoc.getExtent(), originLocation), BlockChangeFlag.ALL,
+                    .execute(() -> archetypeVolume.apply(new Location<World>(itemFrameLoc.getExtent(), originLocation), BlockChangeFlag.ALL,
                             Cause.source(Edifice.getContainer()).build()))
                     .submit(plugin);
 
@@ -338,13 +308,4 @@ public class InteractEntityEventHandler {
         });
     }
 
-    private BlockSnapshot rotateBlockDirectionData(BlockSnapshot block, int rotationIterations) {
-        if (!block.get(Keys.DIRECTION).isPresent()) {
-            return block;
-        }
-        Direction orig = block.get(Keys.DIRECTION).get();
-        int index = (CARDINAL_SET.indexOf(orig) + rotationIterations) % CARDINAL_SET.size();
-        Direction newDir = CARDINAL_SET.get(index);
-        return block.with(Keys.DIRECTION, newDir).get();
-    }
 }
