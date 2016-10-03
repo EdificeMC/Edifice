@@ -1,10 +1,7 @@
 package me.reherhold.edifice.command.executor;
 
 import static me.reherhold.edifice.StructureJSONKeys.AUTHOR;
-import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
-import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
 import static me.reherhold.edifice.StructureJSONKeys.NAME;
-import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
 
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;

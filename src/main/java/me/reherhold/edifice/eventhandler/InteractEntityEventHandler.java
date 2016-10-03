@@ -27,14 +27,14 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.Axis;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.util.DiscreteTransform3;
 import org.spongepowered.api.world.BlockChangeFlag;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.extent.ArchetypeVolume;
-import org.spongepowered.api.world.extent.BlockVolume;
-import org.spongepowered.api.world.extent.worker.procedure.BlockVolumeVisitor;
+import org.spongepowered.api.world.extent.MutableBlockVolume;
 import org.spongepowered.api.world.schematic.Schematic;
 
 import java.util.List;
@@ -197,52 +197,54 @@ public class InteractEntityEventHandler {
             // direction
             int directionIndexDifference = CARDINAL_SET.indexOf(itemFrameDirection.getOpposite())
                     - CARDINAL_SET.indexOf(Direction.valueOf(metadata.getString(DataQuery.of("Direction")).get()));
-            int rotationIterations = directionIndexDifference < 0 ? directionIndexDifference + 4 : directionIndexDifference;
+            int quarterTurns = directionIndexDifference < 0 ? directionIndexDifference + 4 : directionIndexDifference;
 
-            System.out.println("Rotation iterations: " + rotationIterations);
+            System.out.println("Rotation iterations: " + quarterTurns);
 
             // TODO check if the area is clear based on config value
 
             ArchetypeVolume archetypeVolume = schematic;
-            if (rotationIterations != 0) {
+            if (quarterTurns != 0) {
                 System.out.println(10);
                 Vector3i size = schematic.getBlockMax().sub(schematic.getBlockMin()).add(Vector3i.ONE);
-                if (rotationIterations == 1 || rotationIterations == 3) {
+                if (quarterTurns == 1 || quarterTurns == 3) {
                     size = new Vector3i(size.getZ(), size.getY(), size.getX());
                 }
                 System.out.println(11);
 
-                final ArchetypeVolume constructedVolume = Sponge.getRegistry().getExtentBufferFactory().createArchetypeVolume(size);
+//                final ArchetypeVolume constructedVolume = Sponge.getRegistry().getExtentBufferFactory().createArchetypeVolume(size);
                 System.out.println(12);
+                DiscreteTransform3 rotationTransform = DiscreteTransform3.fromRotation(quarterTurns, Axis.Y);
+                MutableBlockVolume rotatedVolume = schematic.getBlockView(rotationTransform);
                 System.out.println(schematic);
-                System.out.println(constructedVolume);
+                System.out.println(rotatedVolume);
 //                DiscreteTransform3.fromRotation(quarterTurns, axis, point, blockCorner) TODO do this
-                schematic.getRelativeBlockView().getBlockWorker(Cause.source(this).build()).iterate(new BlockVolumeVisitor() {
-
-                    @Override
-                    public void visit(BlockVolume volume, int x, int y, int z) {
-                        try {
-                            System.out.println(x);
-                            System.out.println(y);
-                            System.out.println(z);
-                            Vector3i destination = new Vector3i(z, y, x);
-//                            for (int i = 0; i < rotationIterations; i++) {
-//                                destination = new Vector3i(destination.getZ(), destination.getY(), -destination.getX());
-//                            }
-//                            if (rotationIterations == 1 || rotationIterations == 3) {
-//                                destination.mul(-1, 1, -1);
-//                            }
-
-                            constructedVolume.setBlock(destination, volume.getBlock(x, y, z), Cause.source(this).build());
-                        } catch (Exception e) {
-                            System.out.println(e);
-                            e.printStackTrace(System.out);
-                        }
-
-                    }
-                });
+//                schematic.getRelativeBlockView().getBlockWorker(Cause.source(this).build()).iterate(new BlockVolumeVisitor() {
+//
+//                    @Override
+//                    public void visit(BlockVolume volume, int x, int y, int z) {
+//                        try {
+//                            System.out.println(x);
+//                            System.out.println(y);
+//                            System.out.println(z);
+//                            Vector3i destination = new Vector3i(z, y, x);
+////                            for (int i = 0; i < rotationIterations; i++) {
+////                                destination = new Vector3i(destination.getZ(), destination.getY(), -destination.getX());
+////                            }
+////                            if (rotationIterations == 1 || rotationIterations == 3) {
+////                                destination.mul(-1, 1, -1);
+////                            }
+//
+//                            constructedVolume.setBlock(destination, volume.getBlock(x, y, z), Cause.source(this).build());
+//                        } catch (Exception e) {
+//                            System.out.println(e);
+//                            e.printStackTrace(System.out);
+//                        }
+//
+//                    }
+//                });
                 System.out.println(13);
-                archetypeVolume = constructedVolume;
+//                archetypeVolume = constructedVolume;
             }
 
             final ArchetypeVolume archetypeVolumeRef = archetypeVolume;
