@@ -9,6 +9,7 @@ public class StructureDataQueries {
     public static final DataQuery NAME = of("Name");
     public static final DataQuery AUTHOR_UUID = of("AuthorUuid");
     public static final DataQuery OWNER_UUID = of("OwnerUuid");
+    public static final DataQuery ORIGIN = of("Origin");
     public static final DataQuery BLOCKS = of("Blocks");
 
 }

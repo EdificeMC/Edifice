@@ -2,6 +2,7 @@ package me.reherhold.edifice.data.structure;
 
 import static me.reherhold.edifice.data.structure.StructureDataQueries.AUTHOR_UUID;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.BLOCKS;
+import static me.reherhold.edifice.data.structure.StructureDataQueries.ORIGIN;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.NAME;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.OWNER_UUID;
 
@@ -23,7 +24,7 @@ public class StructureBuilder extends AbstractDataBuilder<Structure> {
 
     public StructureBuilder() {
         super(Structure.class, 1);
-    }   
+    }
 
     @Override
     protected Optional<Structure> buildContent(DataView container) throws InvalidDataException {
@@ -37,7 +38,7 @@ public class StructureBuilder extends AbstractDataBuilder<Structure> {
             }
             Structure structure =
                     new Structure(container.getString(NAME).get(), UUID.fromString(container.getString(AUTHOR_UUID).get()),
-                            UUID.fromString(container.getString(OWNER_UUID).get()), blockMap);
+                            UUID.fromString(container.getString(OWNER_UUID).get()), container.getObject(ORIGIN, Vector3i.class).get(), blockMap);
             return Optional.of(structure);
         }
         return Optional.empty();

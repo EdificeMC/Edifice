@@ -2,6 +2,7 @@ package me.reherhold.edifice.data.structure;
 
 import static me.reherhold.edifice.data.EdificeKeys.STRUCTURE;
 
+import com.flowpowered.math.vector.Vector3i;
 import me.reherhold.edifice.Structure;
 import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.DataView;
@@ -26,7 +27,7 @@ public class StructureDataManipulatorBuilder implements DataManipulatorBuilder<S
     @Override
     public StructureData create() {
         UUID zeroUUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
-        return new StructureData(new Structure("", zeroUUID, zeroUUID, new HashMap<>()));
+        return new StructureData(new Structure("", zeroUUID, zeroUUID, Vector3i.ZERO, new HashMap<>()));
     }
 
     @Override

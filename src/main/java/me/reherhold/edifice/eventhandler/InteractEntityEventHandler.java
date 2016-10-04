@@ -201,7 +201,7 @@ public class InteractEntityEventHandler {
             Structure structure =
                     new Structure(metadata.getString(DataQuery.of(Schematic.METADATA_NAME)).get(),
                             UUID.fromString(metadata.getString(DataQuery.of(Schematic.METADATA_AUTHOR)).get()), player.getUniqueId(),
-                            structureBlocks);
+                            originLocation, structureBlocks);
 
             StructureDataManipulatorBuilder builder =
                     (StructureDataManipulatorBuilder) Sponge.getDataManager().getManipulatorBuilder(StructureData.class).get();

@@ -16,12 +16,14 @@ public class Structure implements DataSerializable {
     private String name;
     private UUID creatorUUID;
     private UUID ownerUUID;
+    private Vector3i origin;
     private Map<BlockState, List<Vector3i>> remainingBlocks;
 
-    public Structure(String name, UUID creatorUUID, UUID ownerUUID, Map<BlockState, List<Vector3i>> remainingBlocks) {
+    public Structure(String name, UUID creatorUUID, UUID ownerUUID, Vector3i origin, Map<BlockState, List<Vector3i>> remainingBlocks) {
         this.name = name;
         this.creatorUUID = creatorUUID;
         this.ownerUUID = ownerUUID;
+        this.origin = origin;
         this.remainingBlocks = remainingBlocks;
     }
 
@@ -35,6 +37,10 @@ public class Structure implements DataSerializable {
 
     public UUID getOwnerUUID() {
         return this.ownerUUID;
+    }
+    
+    public Vector3i getOrigin() {
+        return this.origin;
     }
 
     public Map<BlockState, List<Vector3i>> getRemainingBlocks() {
