@@ -3,9 +3,11 @@ package me.reherhold.edifice.eventhandler;
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
 import me.reherhold.edifice.Structure;
+import me.reherhold.edifice.Util;
 import me.reherhold.edifice.data.EdificeKeys;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
@@ -65,10 +67,15 @@ public class InteractBlockEventHandler {
     private void handleStructureInfo(InteractBlockEvent.Secondary event, Player player, Location<World> location) {
         Structure structure = location.get(EdificeKeys.STRUCTURE).get();
         List<Text> materialsNeeded = new ArrayList<>();
-        for (String itemId : structure.getRemainingBlocks().keySet()) {
-            ItemType itemType = Sponge.getRegistry().getType(ItemType.class, itemId).get();
-            materialsNeeded.add(Text.of(TextColors.GREEN, structure.getRemainingBlocks().get(itemId).size(), " ", TextColors.GOLD, itemType
-                    .getTranslation().get()));
+        for (BlockState blockState : structure.getRemainingBlocks().keySet()) {
+            Optional<ItemType> itemTypeOpt = Util.resolveItemType(blockState);
+            if (!itemTypeOpt.isPresent()) {
+                continue;
+            }
+
+            materialsNeeded
+                    .add(Text.of(TextColors.GREEN, structure.getRemainingBlocks().get(blockState).size(), " ", TextColors.GOLD, itemTypeOpt.get()
+                            .getTranslation().get()));
         }
 
         Text title = Text.of("Constructing ", TextColors.GOLD, structure.getName());

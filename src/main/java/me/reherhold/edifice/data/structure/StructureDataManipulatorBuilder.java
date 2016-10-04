@@ -7,7 +7,6 @@ import org.spongepowered.api.data.DataHolder;
 import org.spongepowered.api.data.DataView;
 import org.spongepowered.api.data.manipulator.DataManipulatorBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
-import org.spongepowered.api.util.Direction;
 
 import java.util.HashMap;
 import java.util.Optional;
@@ -27,7 +26,7 @@ public class StructureDataManipulatorBuilder implements DataManipulatorBuilder<S
     @Override
     public StructureData create() {
         UUID zeroUUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
-        return new StructureData(new Structure("", zeroUUID, zeroUUID, Direction.NONE, new HashMap<>()));
+        return new StructureData(new Structure("", zeroUUID, zeroUUID, new HashMap<>()));
     }
 
     @Override
