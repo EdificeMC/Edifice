@@ -57,7 +57,7 @@ public class EdificeCache {
 
                     @Override
                     public CompletableFuture<Optional<Schematic>> asyncLoad(String structureId, Executor executor) {
-                        final String schematicURL = "https://storage.googleapis.com/edifice-structures/" + structureId + ".schematic";
+                        final String schematicURL = "https://storage.googleapis.com/edifice-structures/" + structureId + ".schem";
                         return CompletableFuture.supplyAsync(() -> {
                             try {
                                 HttpResponse<InputStream> response = Unirest.get(schematicURL)
