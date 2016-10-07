@@ -1,11 +1,11 @@
 package me.reherhold.edifice;
 
+import com.flowpowered.math.vector.Vector3i;
 import me.reherhold.edifice.data.structure.StructureDataQueries;
-import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataSerializable;
 import org.spongepowered.api.data.MemoryDataContainer;
-import org.spongepowered.api.util.Direction;
 
 import java.util.List;
 import java.util.Map;
@@ -16,14 +16,14 @@ public class Structure implements DataSerializable {
     private String name;
     private UUID creatorUUID;
     private UUID ownerUUID;
-    private Direction direction;
-    Map<String, List<BlockSnapshot>> remainingBlocks;
+    private Vector3i origin;
+    private Map<BlockState, List<Vector3i>> remainingBlocks;
 
-    public Structure(String name, UUID creatorUUID, UUID ownerUUID, Direction direction, Map<String, List<BlockSnapshot>> remainingBlocks) {
+    public Structure(String name, UUID creatorUUID, UUID ownerUUID, Vector3i origin, Map<BlockState, List<Vector3i>> remainingBlocks) {
         this.name = name;
         this.creatorUUID = creatorUUID;
         this.ownerUUID = ownerUUID;
-        this.direction = direction;
+        this.origin = origin;
         this.remainingBlocks = remainingBlocks;
     }
 
@@ -38,12 +38,12 @@ public class Structure implements DataSerializable {
     public UUID getOwnerUUID() {
         return this.ownerUUID;
     }
-
-    public Direction getDirection() {
-        return this.direction;
+    
+    public Vector3i getOrigin() {
+        return this.origin;
     }
 
-    public Map<String, List<BlockSnapshot>> getRemainingBlocks() {
+    public Map<BlockState, List<Vector3i>> getRemainingBlocks() {
         return this.remainingBlocks;
     }
 
@@ -55,9 +55,8 @@ public class Structure implements DataSerializable {
     @Override
     public DataContainer toContainer() {
         return new MemoryDataContainer().set(StructureDataQueries.NAME, getName())
-                .set(StructureDataQueries.CREATOR_UUID, getCreatorUUID().toString())
+                .set(StructureDataQueries.AUTHOR_UUID, getCreatorUUID().toString())
                 .set(StructureDataQueries.OWNER_UUID, getOwnerUUID().toString())
-                .set(StructureDataQueries.DIRECTION, getDirection().toString())
                 .set(StructureDataQueries.BLOCKS, getRemainingBlocks());
     }
 

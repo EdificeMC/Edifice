@@ -1,18 +1,7 @@
 package me.reherhold.edifice.command.executor;
 
-import static me.reherhold.edifice.StructureJSONKeys.BLOCKS;
-import static me.reherhold.edifice.StructureJSONKeys.CREATOR_UUID;
-import static me.reherhold.edifice.StructureJSONKeys.DIRECTION;
-import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
 import static me.reherhold.edifice.StructureJSONKeys.ID;
-import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
 import static me.reherhold.edifice.StructureJSONKeys.NAME;
-import static me.reherhold.edifice.StructureJSONKeys.POSITION;
-import static me.reherhold.edifice.StructureJSONKeys.POSITION_X;
-import static me.reherhold.edifice.StructureJSONKeys.POSITION_Y;
-import static me.reherhold.edifice.StructureJSONKeys.POSITION_Z;
-import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
-import static me.reherhold.edifice.StructureJSONKeys.WORLD_UUID;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
@@ -21,32 +10,34 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.json.JSONConfigurationLoader;
-import org.json.JSONArray;
+import org.apache.http.entity.ContentType;
 import org.json.JSONObject;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.data.persistence.DataFormats;
 import org.spongepowered.api.data.persistence.DataTranslators;
+import org.spongepowered.api.data.persistence.InvalidDataException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.util.Direction.Division;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.extent.ArchetypeVolume;
+import org.spongepowered.api.world.schematic.BlockPaletteTypes;
+import org.spongepowered.api.world.schematic.Schematic;
 
 import java.io.IOException;
-import java.io.StringWriter;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
+import java.util.zip.GZIPOutputStream;
 
 public class SaveStructureExecutor implements CommandExecutor {
 
@@ -72,7 +63,6 @@ public class SaveStructureExecutor implements CommandExecutor {
             return CommandResult.empty();
         }
 
-        World world = this.plugin.getPlayerSelectedLocations().get(uuid).getLeft().getExtent();
         Vector3i loc1 = this.plugin.getPlayerSelectedLocations().get(uuid).getLeft().getBlockPosition();
         Vector3i loc2 = this.plugin.getPlayerSelectedLocations().get(uuid).getRight().getBlockPosition();
 
@@ -87,64 +77,38 @@ public class SaveStructureExecutor implements CommandExecutor {
 
         Direction direction = Direction.getClosestHorizontal(convertRotation(player.getRotation()), Division.CARDINAL);
 
-        JSONObject structure = new JSONObject().put(NAME, structureName)
-                .put(CREATOR_UUID, player.getUniqueId().toString()).put(WIDTH, maxX - minX + 1)
-                .put(LENGTH, maxZ - minZ + 1).put(HEIGHT, maxY - minY + 1).put(BLOCKS, new JSONArray())
-                .put(DIRECTION, direction.toString());
-
         player.sendMessage(Text.of(TextColors.GREEN, "Analyzing the structure..."));
 
         Vector3i bottomCorner = new Vector3i(0, 0, 0);
-        // Vector3i topCorner = new Vector3i(0, 0, 0);
         switch (direction) {
             case NORTH:
                 bottomCorner = new Vector3i(minX, minY, maxZ);
-                // topCorner = new Vector3i(maxX, maxY, minZ);
                 break;
             case SOUTH:
                 bottomCorner = new Vector3i(maxX, minY, minZ);
-                // topCorner = new Vector3i(minX, maxY, maxZ);
                 break;
             case EAST:
                 bottomCorner = new Vector3i(minX, minY, minZ);
-                // topCorner = new Vector3i(maxX, maxY, maxZ);
                 break;
             case WEST:
                 bottomCorner = new Vector3i(maxX, minY, maxZ);
-                // topCorner = new Vector3i(minX, maxY, minZ);
                 break;
             default:
                 player.sendMessage(Text.of(TextColors.RED, "Look in the direction facing the front of your structure."));
                 return CommandResult.empty();
         }
 
-        for (int i = minX; i <= maxX; i++) {
-            for (int j = minY; j <= maxY; j++) {
-                for (int k = minZ; k <= maxZ; k++) {
-                    StringWriter writer = new StringWriter();
-                    BlockSnapshot block = world.createSnapshot(new Vector3i(i, j, k));
-                    if (block.getState().getType() == BlockTypes.AIR) {
-                        continue;
-                    }
-                    ConfigurationNode node = DataTranslators.CONFIGURATION_NODE.translate(block.toContainer());
-                    try {
-                        JSONConfigurationLoader.builder().build().saveInternal(node, writer);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    JSONObject jsonBlock = new JSONObject(writer.toString());
-                    jsonBlock.remove(WORLD_UUID);
-                    jsonBlock.getJSONObject(POSITION).put(POSITION_X, i - bottomCorner.getX())
-                            .put(POSITION_Y, j - bottomCorner.getY()).put(POSITION_Z, k - bottomCorner.getZ());
-                    structure.getJSONArray(BLOCKS).put(jsonBlock);
-                }
-            }
-        }
+        ArchetypeVolume volume = player.getWorld().createArchetypeVolume(new Vector3i(minX, minY, minZ),
+                new Vector3i(maxX, maxY, maxZ), bottomCorner);
+
+        Schematic schematic = Schematic.builder().volume(volume).metaValue(Schematic.METADATA_AUTHOR, player.getUniqueId().toString())
+                .metaValue(Schematic.METADATA_NAME, structureName).metaValue("Direction", direction.toString())
+                .paletteType(BlockPaletteTypes.LOCAL).build();
 
         player.sendMessage(Text.of(TextColors.GREEN, "Uploading the structure..."));
 
-        Sponge.getScheduler().createTaskBuilder().execute(new SaveStructureRunnable(player, structure)).async()
-                .name("Edifice - Submit Structure to REST API").submit(this.plugin);
+        Sponge.getScheduler().createTaskBuilder().execute(new SaveStructureRunnable(player, schematic))
+                .async().name("Edifice - Submit Structure to REST API").submit(this.plugin);
 
         return CommandResult.success();
     }
@@ -152,19 +116,38 @@ public class SaveStructureExecutor implements CommandExecutor {
     class SaveStructureRunnable implements Runnable {
 
         private Player player;
-        private JSONObject structure;
+        private Schematic schematic;
 
-        public SaveStructureRunnable(Player player, JSONObject structure) {
+        public SaveStructureRunnable(Player player, Schematic schematic) {
             this.player = player;
-            this.structure = structure;
+            this.schematic = schematic;
         }
 
         @Override
         public void run() {
+            PipedInputStream in = new PipedInputStream();
+            PipedOutputStream out;
+
+            try {
+                out = new PipedOutputStream(in);
+            } catch (IOException e2) {
+                e2.printStackTrace();
+                return;
+            }
+
+            new Thread(() -> {
+                try {
+                    DataFormats.NBT.writeTo(new GZIPOutputStream(out), DataTranslators.SCHEMATIC.translate(this.schematic));
+                } catch (InvalidDataException | IOException e1) {
+                    e1.printStackTrace();
+                }
+            }).start();
+
+            // Upload the schematic
             HttpResponse<JsonNode> response;
             try {
-                response = Unirest.post(Edifice.config.getRestURI().toString() + "/structures")
-                        .body(this.structure)
+                response = Unirest.post(Edifice.config.getRestURI().toString() + "/structures/")
+                        .field("schematic", in, ContentType.APPLICATION_OCTET_STREAM, "schematic.dat")
                         .asJson();
             } catch (Exception e) {
                 this.player.sendMessage(Text.of(TextColors.RED, "There was an error uploading your structure."));
@@ -173,24 +156,25 @@ public class SaveStructureExecutor implements CommandExecutor {
             }
 
             JSONObject responseBody = response.getBody().getObject();
-            if (response.getStatus() == 201) {
-                String structureID = responseBody.getString(ID);
-                this.player.sendMessage(Text.of(TextColors.GREEN, "You have successfully uploaded ", TextColors.GOLD,
-                        this.structure.getString(NAME), TextColors.GREEN, "."));
-                try {
-                    this.player.sendMessage(Text.of(TextColors.GREEN, "Click ",
-                            Text.builder("here").color(TextColors.GOLD)
-                                    .onClick(TextActions.openUrl(
-                                            new URL(Edifice.config.getWebURI().toString() + "/create/" + structureID)))
-                                    .build(),
-                            TextColors.GREEN, " to finalize it with a screenshot."));
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-            } else {
+            if (response.getStatus() != 201) {
                 this.player.sendMessage(
                         Text.of(TextColors.RED, "There was an error uploading your structure. Received status code "
                                 + response.getStatus() + " and response body " + responseBody.toString()));
+                return;
+            }
+
+            final String structureID = responseBody.getString(ID);
+            this.player.sendMessage(Text.of(TextColors.GREEN, "You have successfully uploaded ", TextColors.GOLD,
+                    responseBody.getString(NAME), TextColors.GREEN, "."));
+            try {
+                this.player.sendMessage(Text.of(TextColors.GREEN, "Click ",
+                        Text.builder("here").color(TextColors.GOLD)
+                                .onClick(TextActions.openUrl(
+                                        new URL(Edifice.config.getWebURI().toString() + "/create/" + structureID)))
+                                .build(),
+                        TextColors.GREEN, " to finalize it with a screenshot."));
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
             }
         }
 

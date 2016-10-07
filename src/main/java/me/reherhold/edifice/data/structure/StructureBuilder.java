@@ -1,18 +1,19 @@
 package me.reherhold.edifice.data.structure;
 
+import static me.reherhold.edifice.data.structure.StructureDataQueries.AUTHOR_UUID;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.BLOCKS;
-import static me.reherhold.edifice.data.structure.StructureDataQueries.CREATOR_UUID;
-import static me.reherhold.edifice.data.structure.StructureDataQueries.DIRECTION;
+import static me.reherhold.edifice.data.structure.StructureDataQueries.ORIGIN;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.NAME;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.OWNER_UUID;
 
+import com.flowpowered.math.vector.Vector3i;
 import me.reherhold.edifice.Structure;
-import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.DataView;
 import org.spongepowered.api.data.persistence.AbstractDataBuilder;
 import org.spongepowered.api.data.persistence.InvalidDataException;
-import org.spongepowered.api.util.Direction;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,18 +28,17 @@ public class StructureBuilder extends AbstractDataBuilder<Structure> {
 
     @Override
     protected Optional<Structure> buildContent(DataView container) throws InvalidDataException {
-        if (container.contains(NAME, CREATOR_UUID, OWNER_UUID, BLOCKS, DIRECTION)) {
-            HashMap<String, List<BlockSnapshot>> blockMap = new HashMap<>();
+        if (container.contains(NAME, AUTHOR_UUID, OWNER_UUID, BLOCKS)) {
+            HashMap<BlockState, List<Vector3i>> blockMap = new HashMap<>();
             DataView blockMapView = container.getView(BLOCKS).get();
             for (DataQuery key : blockMapView.getKeys(false)) {
-                blockMap.put(key.toString(), blockMapView.getSerializableList(key, BlockSnapshot.class).get());
+                BlockState blockState = Sponge.getRegistry().getType(BlockState.class, key.toString()).get();
+                List<Vector3i> vectorList = blockMapView.getObjectList(key, Vector3i.class).get();
+                blockMap.put(blockState, vectorList);
             }
             Structure structure =
-                    new Structure(container.getString(NAME).get(), UUID.fromString(container.getString(CREATOR_UUID).get()),
-                            UUID.fromString(container.getString(OWNER_UUID).get()),
-                            Direction.valueOf(container
-                                    .getString(DIRECTION).get()),
-                            blockMap);
+                    new Structure(container.getString(NAME).get(), UUID.fromString(container.getString(AUTHOR_UUID).get()),
+                            UUID.fromString(container.getString(OWNER_UUID).get()), container.getObject(ORIGIN, Vector3i.class).get(), blockMap);
             return Optional.of(structure);
         }
         return Optional.empty();

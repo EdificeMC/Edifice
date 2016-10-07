@@ -26,8 +26,8 @@ public class StructureData extends AbstractSingleData<Structure, StructureData, 
 
     @Override
     public Optional<StructureData> fill(DataHolder dataHolder, MergeFunction mergeFn) {
-        StructureData warpData = Preconditions.checkNotNull(mergeFn).merge(copy(), dataHolder.get(StructureData.class).orElse(copy()));
-        return Optional.of(set(STRUCTURE, warpData.get(STRUCTURE).get()));
+        StructureData structureData = Preconditions.checkNotNull(mergeFn).merge(copy(), dataHolder.get(StructureData.class).orElse(copy()));
+        return Optional.of(set(STRUCTURE, structureData.get(STRUCTURE).get()));
     }
 
     @Override

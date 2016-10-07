@@ -1,10 +1,7 @@
 package me.reherhold.edifice.command.executor;
 
-import static me.reherhold.edifice.StructureJSONKeys.CREATOR_UUID;
-import static me.reherhold.edifice.StructureJSONKeys.HEIGHT;
-import static me.reherhold.edifice.StructureJSONKeys.LENGTH;
+import static me.reherhold.edifice.StructureJSONKeys.AUTHOR;
 import static me.reherhold.edifice.StructureJSONKeys.NAME;
-import static me.reherhold.edifice.StructureJSONKeys.WIDTH;
 
 import me.reherhold.edifice.Constants;
 import me.reherhold.edifice.Edifice;
@@ -67,7 +64,7 @@ public class GiveBluePrintExecutor implements CommandExecutor {
         public void run() {
             Optional<JSONObject> structureOpt = Optional.empty();
             try {
-                structureOpt = Edifice.structureCache.getById(this.structureID).get();
+                structureOpt = Edifice.structureCache.get(this.structureID).get();
             } catch (InterruptedException | ExecutionException e1) {
                 e1.printStackTrace();
             }
@@ -80,7 +77,7 @@ public class GiveBluePrintExecutor implements CommandExecutor {
 
             String creatorName;
             try {
-                GameProfile creatorProfile = Sponge.getServer().getGameProfileManager().get(UUID.fromString(structure.getString(CREATOR_UUID))).get();
+                GameProfile creatorProfile = Sponge.getServer().getGameProfileManager().get(UUID.fromString(structure.getString(AUTHOR))).get();
                 creatorName = creatorProfile.getName().get();
             } catch (Exception e) {
                 creatorName = "Anonymous";
@@ -93,10 +90,7 @@ public class GiveBluePrintExecutor implements CommandExecutor {
                     .add(Keys.DISPLAY_NAME, Text.of(TextColors.GOLD, structure.getString(NAME), TextColors.GREEN, " Blueprint"))
                     .add(Keys.ITEM_LORE,
                             Arrays.asList(Text.of(TextColors.BLUE, "Creator: ", TextColors.GOLD, creatorName),
-                                    Text.of(TextColors.GREEN, "To activate, place in an item frame in front"),
-                                    Text.of(TextColors.GREEN, "in front of a cleared ", TextColors.GOLD, structure.getInt(WIDTH), TextColors.GREEN,
-                                            " x ", TextColors.GOLD, structure.getInt(LENGTH), TextColors.GREEN, " x ", TextColors.GOLD,
-                                            structure.getInt(HEIGHT), TextColors.GREEN, " area.")))
+                                    Text.of(TextColors.GREEN, "To activate, place in an item frame on a chest")))
                     .build();
             this.player.getInventory().offer(blueprint);
 
