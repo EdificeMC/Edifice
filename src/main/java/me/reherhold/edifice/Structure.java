@@ -38,7 +38,7 @@ public class Structure implements DataSerializable {
     public UUID getOwnerUUID() {
         return this.ownerUUID;
     }
-    
+
     public Vector3i getOrigin() {
         return this.origin;
     }

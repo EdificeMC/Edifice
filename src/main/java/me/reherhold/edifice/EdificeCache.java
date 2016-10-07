@@ -40,7 +40,7 @@ public class EdificeCache {
                                 e1.printStackTrace();
                                 return Optional.empty();
                             }
-                            
+
                             if (response.getStatus() != 200) {
                                 return Optional.empty();
                             }

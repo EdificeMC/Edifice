@@ -2,8 +2,8 @@ package me.reherhold.edifice.data.structure;
 
 import static me.reherhold.edifice.data.structure.StructureDataQueries.AUTHOR_UUID;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.BLOCKS;
-import static me.reherhold.edifice.data.structure.StructureDataQueries.ORIGIN;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.NAME;
+import static me.reherhold.edifice.data.structure.StructureDataQueries.ORIGIN;
 import static me.reherhold.edifice.data.structure.StructureDataQueries.OWNER_UUID;
 
 import com.flowpowered.math.vector.Vector3i;

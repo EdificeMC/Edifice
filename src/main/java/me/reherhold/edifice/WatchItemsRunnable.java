@@ -85,7 +85,7 @@ public class WatchItemsRunnable implements Runnable {
                             int itemsFromStackUsed = 0;
                             for (int i = 0; i < itemStack.getCount(); i++) {
                                 if (blockPositions.size() > 0) {
-                                    Location<World> location = new Location<World>(world, structure.getOrigin().add(blockPositions.get(0)));
+                                    Location<World> location = new Location<>(world, structure.getOrigin().add(blockPositions.get(0)));
                                     location.setBlock(blockState, Cause.source(Edifice.getContainer()).build());
                                     blockPositions.remove(0);
                                     itemsFromStackUsed++;

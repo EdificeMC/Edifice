@@ -120,7 +120,7 @@ public class InteractEntityEventHandler {
                     structureOriginTranslation = new Vector3i(2, 0, 0);
                     break;
             }
-            Location<World> structureBlock = new Location<World>(itemFrameLoc.getExtent(), itemFrameLoc.getBlockPosition().add(chestTranslation));
+            Location<World> structureBlock = new Location<>(itemFrameLoc.getExtent(), itemFrameLoc.getBlockPosition().add(chestTranslation));
 
             if (structureBlock.getBlockType() != BlockTypes.CHEST) {
                 return;
@@ -180,7 +180,7 @@ public class InteractEntityEventHandler {
                         }
 
                         if (structureBlocks.containsKey(block)) {
-                            ((List<Vector3i>) structureBlocks.get(block)).add(pos);
+                            structureBlocks.get(block).add(pos);
                         } else {
                             structureBlocks.put(block, Lists.newArrayList(pos));
                         }
@@ -192,9 +192,9 @@ public class InteractEntityEventHandler {
 
             if (buildInstantly) {
                 Sponge.getScheduler().createTaskBuilder()
-                        .execute(() -> archetypeVolume.apply(new Location<World>(itemFrameLoc.getExtent(), originLocation), BlockChangeFlag.ALL,
+                        .execute(() -> archetypeVolume.apply(new Location<>(itemFrameLoc.getExtent(), originLocation), BlockChangeFlag.ALL,
                                 Cause.source(Edifice.getContainer()).build()))
-                        .submit(plugin);
+                        .submit(this.plugin);
                 return;
             }
 
