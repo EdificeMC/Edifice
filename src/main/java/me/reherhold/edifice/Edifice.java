@@ -119,12 +119,15 @@ public class Edifice {
 
         CommandSpec saveStructureSpec = CommandSpec.builder()
                 .description(Text.of("Saves the structure within the marked corners"))
-                .executor(new SaveStructureExecutor(this)).arguments(GenericArguments.string(Text.of("name"))).build();
+                .executor(new SaveStructureExecutor(this)).arguments(GenericArguments.string(Text.of("name")),
+                        GenericArguments.optional(GenericArguments.string(Text.of("authorUUID")), "a"))
+                .build();
         subCommands.put(Arrays.asList("save"), saveStructureSpec);
 
         CommandSpec createStructureSpec = CommandSpec.builder()
                 .description(Text.of("Starts the process of creating a structure"))
-                .executor(new GiveBluePrintExecutor(this)).arguments(GenericArguments.string(Text.of("id"))).build();
+                .executor(new GiveBluePrintExecutor(this)).arguments(GenericArguments.string(Text.of("id")))
+                .build();
         subCommands.put(Arrays.asList("create"), createStructureSpec);
 
         CommandSpec mainSpec = CommandSpec.builder().children(subCommands).build();
@@ -219,7 +222,7 @@ public class Edifice {
         }
         return false;
     }
-    
+
     public static PluginContainer getContainer() {
         return Sponge.getPluginManager().getPlugin("edifice").get();
     }

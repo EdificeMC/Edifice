@@ -54,17 +54,17 @@ public class SaveStructureExecutor implements CommandExecutor {
             return CommandResult.empty();
         }
         Player player = (Player) source;
-        UUID uuid = player.getUniqueId();
+        UUID playerUUID = player.getUniqueId();
 
-        if (!this.plugin.getPlayerSelectedLocations().containsKey(uuid)
-                || this.plugin.getPlayerSelectedLocations().get(uuid).getLeft() == null
-                || this.plugin.getPlayerSelectedLocations().get(uuid).getRight() == null) {
+        if (!this.plugin.getPlayerSelectedLocations().containsKey(playerUUID)
+                || this.plugin.getPlayerSelectedLocations().get(playerUUID).getLeft() == null
+                || this.plugin.getPlayerSelectedLocations().get(playerUUID).getRight() == null) {
             source.sendMessage(Constants.SELECT_LOCATIONS_FIRST);
             return CommandResult.empty();
         }
 
-        Vector3i loc1 = this.plugin.getPlayerSelectedLocations().get(uuid).getLeft().getBlockPosition();
-        Vector3i loc2 = this.plugin.getPlayerSelectedLocations().get(uuid).getRight().getBlockPosition();
+        Vector3i loc1 = this.plugin.getPlayerSelectedLocations().get(playerUUID).getLeft().getBlockPosition();
+        Vector3i loc2 = this.plugin.getPlayerSelectedLocations().get(playerUUID).getRight().getBlockPosition();
 
         final String structureName = (String) args.getOne("name").get();
 
@@ -101,7 +101,9 @@ public class SaveStructureExecutor implements CommandExecutor {
         ArchetypeVolume volume = player.getWorld().createArchetypeVolume(new Vector3i(minX, minY, minZ),
                 new Vector3i(maxX, maxY, maxZ), bottomCorner);
 
-        Schematic schematic = Schematic.builder().volume(volume).metaValue(Schematic.METADATA_AUTHOR, player.getUniqueId().toString())
+        final String authorUUID = args.<String>getOne("authorUUID").orElse(player.getUniqueId().toString());
+
+        Schematic schematic = Schematic.builder().volume(volume).metaValue(Schematic.METADATA_AUTHOR, authorUUID)
                 .metaValue(Schematic.METADATA_NAME, structureName).metaValue("Direction", direction.toString())
                 .paletteType(BlockPaletteTypes.LOCAL).build();
 
