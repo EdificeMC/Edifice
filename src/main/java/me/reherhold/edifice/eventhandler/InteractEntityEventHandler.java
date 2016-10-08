@@ -145,7 +145,30 @@ public class InteractEntityEventHandler {
             if (quarterTurns != 0) {
                 DiscreteTransform3 rotationTransform = DiscreteTransform3.fromRotation(quarterTurns, Axis.Y);
                 volume = schematic.getBlockView(rotationTransform);
+
+                MutableBlockVolume volumeRef = volume;
+                volume.getBlockWorker(Cause.source(this).build()).iterate(new BlockVolumeVisitor() {
+
+                    @Override
+                    public void visit(BlockVolume tempVolume, int x, int y, int z) {
+                        BlockState block = tempVolume.getBlock(x, y, z);
+                        Optional<Direction> directionOpt = block.get(Keys.DIRECTION);
+                        if (!directionOpt.isPresent()) {
+                            return;
+                        }
+
+                        Direction orig = directionOpt.get();
+                        int index = (CARDINAL_SET.indexOf(orig) + quarterTurns) % CARDINAL_SET.size();
+                        Direction newDir = CARDINAL_SET.get(index);
+
+                        if (quarterTurns == 1 || quarterTurns == 3) {
+                            newDir = newDir.getOpposite();
+                        }
+                        volumeRef.setBlock(x, y, z, block.with(Keys.DIRECTION, newDir).get(), Cause.source(Edifice.getContainer()).build());
+                    }
+                });
             }
+
             Vector3i size = volume.getBlockMax().sub(volume.getBlockMin()).add(Vector3i.ONE);
             switch (itemFrameDirection.getOpposite()) {
                 case NORTH:
