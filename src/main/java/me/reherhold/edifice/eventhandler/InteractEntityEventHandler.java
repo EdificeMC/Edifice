@@ -4,9 +4,11 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Lists;
 import me.reherhold.edifice.Edifice;
 import me.reherhold.edifice.Structure;
+import me.reherhold.edifice.StructureJSONKeys;
 import me.reherhold.edifice.data.EdificeKeys;
 import me.reherhold.edifice.data.structure.StructureData;
 import me.reherhold.edifice.data.structure.StructureDataManipulatorBuilder;
+import org.json.JSONObject;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
@@ -46,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 public class InteractEntityEventHandler {
 
@@ -85,7 +88,22 @@ public class InteractEntityEventHandler {
         if (!structureIdOpt.isPresent()) {
             return;
         }
-        Edifice.schematicCache.get(structureIdOpt.get()).thenAcceptAsync((optSchematic) -> {
+
+        Edifice.structureCache.get(structureIdOpt.get()).thenAcceptAsync((optStructure) -> {
+            if (!optStructure.isPresent()) {
+                return;
+            }
+            JSONObject structureJSON = optStructure.get();
+            String schematicURL = structureJSON.getString(StructureJSONKeys.SCHEMATIC);
+
+            Optional<Schematic> optSchematic;
+            try {
+                optSchematic = Edifice.schematicCache.get(schematicURL).get();
+            } catch (InterruptedException | ExecutionException e1) {
+                e1.printStackTrace();
+                return;
+            }
+
             if (!optSchematic.isPresent()) {
                 return;
             }
