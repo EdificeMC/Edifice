@@ -172,7 +172,7 @@ public class SaveStructureExecutor implements CommandExecutor {
                 this.player.sendMessage(Text.of(TextColors.GREEN, "Click ",
                         Text.builder("here").color(TextColors.GOLD)
                                 .onClick(TextActions.openUrl(
-                                        new URL(Edifice.config.getWebURI().toString() + "/create/" + structureID)))
+                                        new URL(Edifice.config.getWebURI().toString() + "/edit/" + structureID)))
                                 .build(),
                         TextColors.GREEN, " to finalize it with a screenshot."));
             } catch (MalformedURLException e) {
