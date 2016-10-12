@@ -24,6 +24,7 @@ import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.event.entity.InteractEntityEvent;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -234,7 +235,7 @@ public class InteractEntityEventHandler {
             if (buildInstantly) {
                 Sponge.getScheduler().createTaskBuilder()
                         .execute(() -> archetypeVolume.apply(new Location<>(itemFrameLoc.getExtent(), originLocation), BlockChangeFlag.ALL,
-                                Cause.source(Edifice.getContainer()).build()))
+                                Cause.source(Edifice.getContainer()).named(NamedCause.owner(player)).build()))
                         .submit(this.plugin);
                 return;
             }

@@ -9,7 +9,9 @@ import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.Item;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
 import org.spongepowered.api.item.ItemType;
@@ -47,6 +49,7 @@ public class WatchItemsRunnable implements Runnable {
                 }
 
                 UUID ownerUUID = item.getCreator().get();
+                Player player = Sponge.getServer().getPlayer(ownerUUID).get();
 
                 // Normally I would use a Priority R-tree, but it is somewhat
                 // unpractical to maintain a list of regions surrounding blocks
@@ -86,7 +89,7 @@ public class WatchItemsRunnable implements Runnable {
                             for (int i = 0; i < itemStack.getCount(); i++) {
                                 if (blockPositions.size() > 0) {
                                     Location<World> location = new Location<>(world, structure.getOrigin().add(blockPositions.get(0)));
-                                    location.setBlock(blockState, Cause.source(Edifice.getContainer()).build());
+                                    location.setBlock(blockState, Cause.source(Edifice.getContainer()).named(NamedCause.owner(player)).build());
                                     blockPositions.remove(0);
                                     itemsFromStackUsed++;
                                     if (blockPositions.size() == 0) {
