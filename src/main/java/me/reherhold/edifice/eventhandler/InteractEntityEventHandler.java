@@ -177,6 +177,12 @@ public class InteractEntityEventHandler {
                         }
 
                         Direction orig = directionOpt.get();
+
+                        if (CARDINAL_SET.indexOf(orig) == -1) {
+                            // Make sure the block actually has a direction
+                            return;
+                        }
+
                         int index = (CARDINAL_SET.indexOf(orig) + quarterTurns) % CARDINAL_SET.size();
                         Direction newDir = CARDINAL_SET.get(index);
 
