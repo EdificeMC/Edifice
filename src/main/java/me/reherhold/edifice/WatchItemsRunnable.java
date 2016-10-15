@@ -49,7 +49,13 @@ public class WatchItemsRunnable implements Runnable {
                 }
 
                 UUID ownerUUID = item.getCreator().get();
-                Player player = Sponge.getServer().getPlayer(ownerUUID).get();
+
+                Optional<Player> playerOpt = Sponge.getServer().getPlayer(ownerUUID);
+                if (!playerOpt.isPresent()) {
+                    continue;
+                }
+
+                Player player = playerOpt.get();
 
                 // Normally I would use a Priority R-tree, but it is somewhat
                 // unpractical to maintain a list of regions surrounding blocks
