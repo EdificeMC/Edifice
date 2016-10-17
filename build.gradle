@@ -38,7 +38,7 @@ dependencies {
 shadowJar {
 	relocate 'org.apache', 'relocated.org.apache'
     dependencies {
-        exclude(dependency('org.spongepowered:spongeapi:5.0.0-SNAPSHOT'))
+        exclude(dependency('org.spongepowered:spongeapi:5.0.0'))
     }
 }
 
