@@ -120,7 +120,7 @@ public class Edifice {
         CommandSpec saveStructureSpec = CommandSpec.builder()
                 .description(Text.of("Saves the structure within the marked corners"))
                 .executor(new SaveStructureExecutor(this)).arguments(GenericArguments.string(Text.of("name")),
-                        GenericArguments.optional(GenericArguments.string(Text.of("authorUUID")), "a"))
+                        GenericArguments.optional(GenericArguments.string(Text.of("authorUUID"))))
                 .build();
         subCommands.put(Arrays.asList("save"), saveStructureSpec);
 

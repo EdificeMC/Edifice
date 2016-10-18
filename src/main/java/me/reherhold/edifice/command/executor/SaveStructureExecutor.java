@@ -101,7 +101,7 @@ public class SaveStructureExecutor implements CommandExecutor {
         ArchetypeVolume volume = player.getWorld().createArchetypeVolume(new Vector3i(minX, minY, minZ),
                 new Vector3i(maxX, maxY, maxZ), bottomCorner);
 
-        final String authorUUID = args.<String>getOne("authorUUID").orElse(player.getUniqueId().toString());
+        final String authorUUID = args.<String>getOne("authorUUID").orElse(playerUUID.toString());
 
         Schematic schematic = Schematic.builder().volume(volume).metaValue(Schematic.METADATA_AUTHOR, authorUUID)
                 .metaValue(Schematic.METADATA_NAME, structureName).metaValue("Direction", direction.toString())
