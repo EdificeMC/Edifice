@@ -1,8 +1,10 @@
 package me.reherhold.edifice;
 
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.mashape.unirest.http.Unirest;
+import me.reherhold.edifice.command.executor.EdificeExpandWandExecutor;
 import me.reherhold.edifice.command.executor.EdificeWandExecutor;
 import me.reherhold.edifice.command.executor.GiveBluePrintExecutor;
 import me.reherhold.edifice.command.executor.SaveStructureExecutor;
@@ -114,7 +116,10 @@ public class Edifice {
 
         CommandSpec activateWandSpec = CommandSpec.builder()
                 .description(Text.of("Allows the player to start marking corners"))
-                .executor(new EdificeWandExecutor(this)).build();
+                .executor(new EdificeWandExecutor())
+                .child(CommandSpec.builder().description(Text.of("Expands the player's selection to the highest block level"))
+                        .executor(new EdificeExpandWandExecutor()).build(), Lists.newArrayList("expand"))
+                .build();
         subCommands.put(Arrays.asList("wand"), activateWandSpec);
 
         CommandSpec saveStructureSpec = CommandSpec.builder()
