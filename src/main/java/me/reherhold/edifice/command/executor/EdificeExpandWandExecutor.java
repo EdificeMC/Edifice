@@ -11,7 +11,6 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
@@ -61,8 +60,8 @@ public class EdificeExpandWandExecutor implements CommandExecutor {
             }
         }
 
-        Location<World> newMin = new Location<World>(world, minX, minY, minZ);
-        Location<World> newMax = new Location<World>(world, maxX, maxY, maxZ);
+        Location<World> newMin = new Location<>(world, minX, minY, minZ);
+        Location<World> newMax = new Location<>(world, maxX, maxY, maxZ);
 
         Edifice.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<>(newMin, newMax));
         player.sendMessage(Text.of(Constants.SET_FIRST_LOC, TextColors.GOLD, newMin.getPosition()));
