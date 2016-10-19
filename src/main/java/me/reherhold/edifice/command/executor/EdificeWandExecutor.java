@@ -11,12 +11,6 @@ import org.spongepowered.api.entity.living.player.Player;
 
 public class EdificeWandExecutor implements CommandExecutor {
 
-    private Edifice plugin;
-
-    public EdificeWandExecutor(Edifice plugin) {
-        this.plugin = plugin;
-    }
-
     @Override
     public CommandResult execute(CommandSource source, CommandContext arg1) throws CommandException {
         if (!(source instanceof Player)) {
@@ -24,12 +18,12 @@ public class EdificeWandExecutor implements CommandExecutor {
             return CommandResult.empty();
         }
         Player player = (Player) source;
-        if (this.plugin.isWandActivated(player.getUniqueId())) {
+        if (Edifice.isWandActivated(player.getUniqueId())) {
             player.sendMessage(Constants.STOPPED_MARKING_REGION);
-            this.plugin.getPlayerWandActivationStates().put(player.getUniqueId(), false);
+            Edifice.getPlayerWandActivationStates().put(player.getUniqueId(), false);
         } else {
             player.sendMessage(Constants.CAN_MARK_REGION);
-            this.plugin.getPlayerWandActivationStates().put(player.getUniqueId(), true);
+            Edifice.getPlayerWandActivationStates().put(player.getUniqueId(), true);
         }
 
         return CommandResult.success();

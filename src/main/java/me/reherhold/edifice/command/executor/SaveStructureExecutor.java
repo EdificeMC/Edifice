@@ -56,15 +56,15 @@ public class SaveStructureExecutor implements CommandExecutor {
         Player player = (Player) source;
         UUID playerUUID = player.getUniqueId();
 
-        if (!this.plugin.getPlayerSelectedLocations().containsKey(playerUUID)
-                || this.plugin.getPlayerSelectedLocations().get(playerUUID).getLeft() == null
-                || this.plugin.getPlayerSelectedLocations().get(playerUUID).getRight() == null) {
+        if (!Edifice.getPlayerSelectedLocations().containsKey(playerUUID)
+                || Edifice.getPlayerSelectedLocations().get(playerUUID).getLeft() == null
+                || Edifice.getPlayerSelectedLocations().get(playerUUID).getRight() == null) {
             source.sendMessage(Constants.SELECT_LOCATIONS_FIRST);
             return CommandResult.empty();
         }
 
-        Vector3i loc1 = this.plugin.getPlayerSelectedLocations().get(playerUUID).getLeft().getBlockPosition();
-        Vector3i loc2 = this.plugin.getPlayerSelectedLocations().get(playerUUID).getRight().getBlockPosition();
+        Vector3i loc1 = Edifice.getPlayerSelectedLocations().get(playerUUID).getLeft().getBlockPosition();
+        Vector3i loc2 = Edifice.getPlayerSelectedLocations().get(playerUUID).getRight().getBlockPosition();
 
         final String structureName = (String) args.getOne("name").get();
 

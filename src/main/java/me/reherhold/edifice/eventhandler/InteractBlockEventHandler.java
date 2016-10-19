@@ -45,21 +45,21 @@ public class InteractBlockEventHandler {
             handleStructureInfo((InteractBlockEvent.Secondary) event, player, loc);
             return;
         }
-        if (!this.plugin.isWandActivated(player.getUniqueId())) {
+        if (!Edifice.isWandActivated(player.getUniqueId())) {
             return;
         }
 
-        if (!this.plugin.getPlayerSelectedLocations().containsKey(player.getUniqueId())) {
-            this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(null, null));
+        if (!Edifice.getPlayerSelectedLocations().containsKey(player.getUniqueId())) {
+            Edifice.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<Location<World>, Location<World>>(null, null));
         }
 
         if (event instanceof InteractBlockEvent.Primary) {
-            Location<World> existingRight = this.plugin.getPlayerSelectedLocations().get(player.getUniqueId()).getRight();
-            this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<>(loc, existingRight));
+            Location<World> existingRight = Edifice.getPlayerSelectedLocations().get(player.getUniqueId()).getRight();
+            Edifice.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<>(loc, existingRight));
             player.sendMessage(Text.of(Constants.SET_FIRST_LOC, TextColors.GOLD, loc.getPosition()));
         } else if (event instanceof InteractBlockEvent.Secondary) {
-            Location<World> existingLeft = this.plugin.getPlayerSelectedLocations().get(player.getUniqueId()).getLeft();
-            this.plugin.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<>(existingLeft, loc));
+            Location<World> existingLeft = Edifice.getPlayerSelectedLocations().get(player.getUniqueId()).getLeft();
+            Edifice.getPlayerSelectedLocations().put(player.getUniqueId(), new MutablePair<>(existingLeft, loc));
             player.sendMessage(Text.of(Constants.SET_SECOND_LOC, TextColors.GOLD, loc.getPosition()));
         }
     }

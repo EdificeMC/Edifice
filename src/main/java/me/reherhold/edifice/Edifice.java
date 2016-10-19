@@ -61,15 +61,15 @@ public class Edifice {
     @Inject @DefaultConfig(sharedRoot = false) private ConfigurationLoader<CommentedConfigurationNode> configLoader;
     @Inject private Logger logger;
     public static EdificeConfiguration config;
-    private HashMap<UUID, Boolean> playerWandActivationStates;
-    private HashMap<UUID, Pair<Location<World>, Location<World>>> playerSelectedLocations;
+    private static HashMap<UUID, Boolean> playerWandActivationStates;
+    private static HashMap<UUID, Pair<Location<World>, Location<World>>> playerSelectedLocations;
     public static AsyncLoadingCache<String, Optional<JSONObject>> structureCache;
     public static AsyncLoadingCache<String, Optional<Schematic>> schematicCache;
 
     @Listener
     public void preInit(GamePreInitializationEvent event) {
-        this.playerWandActivationStates = new HashMap<>();
-        this.playerSelectedLocations = new HashMap<>();
+        playerWandActivationStates = new HashMap<>();
+        playerSelectedLocations = new HashMap<>();
         Edifice.structureCache = EdificeCache.createStructureCache(this.configDir.resolve("structures"));
         Edifice.schematicCache = EdificeCache.createSchematicCache(this.configDir.resolve("schematics"));
         try {
@@ -208,17 +208,17 @@ public class Edifice {
         return this.logger;
     }
 
-    public HashMap<UUID, Boolean> getPlayerWandActivationStates() {
-        return this.playerWandActivationStates;
+    public static HashMap<UUID, Boolean> getPlayerWandActivationStates() {
+        return Edifice.playerWandActivationStates;
     }
 
-    public HashMap<UUID, Pair<Location<World>, Location<World>>> getPlayerSelectedLocations() {
-        return this.playerSelectedLocations;
+    public static HashMap<UUID, Pair<Location<World>, Location<World>>> getPlayerSelectedLocations() {
+        return Edifice.playerSelectedLocations;
     }
 
-    public boolean isWandActivated(UUID uuid) {
-        if (this.playerWandActivationStates.containsKey(uuid)) {
-            return this.playerWandActivationStates.get(uuid);
+    public static boolean isWandActivated(UUID uuid) {
+        if (Edifice.playerWandActivationStates.containsKey(uuid)) {
+            return Edifice.playerWandActivationStates.get(uuid);
         }
         return false;
     }

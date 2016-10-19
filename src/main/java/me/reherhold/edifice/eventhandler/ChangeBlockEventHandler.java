@@ -19,8 +19,8 @@ public class ChangeBlockEventHandler {
     @Listener
     public void breakBlock(ChangeBlockEvent.Break event, @Root Player player) {
         // Check if the player is in wand mode
-        if (this.plugin.getPlayerWandActivationStates().containsKey(player.getUniqueId())
-                && this.plugin.getPlayerWandActivationStates().get(player.getUniqueId())) {
+        if (Edifice.getPlayerWandActivationStates().containsKey(player.getUniqueId())
+                && Edifice.getPlayerWandActivationStates().get(player.getUniqueId())) {
             // Check if the player is in creative and not sneaking
             if (player.get(Keys.GAME_MODE).get() == GameModes.CREATIVE && !player.get(Keys.IS_SNEAKING).get()) {
                 event.setCancelled(true);
