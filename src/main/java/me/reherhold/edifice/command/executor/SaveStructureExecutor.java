@@ -5,6 +5,7 @@ import static me.reherhold.edifice.StructureJSONKeys.NAME;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.collect.Lists;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -13,6 +14,7 @@ import me.reherhold.edifice.Edifice;
 import org.apache.http.entity.ContentType;
 import org.json.JSONObject;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -36,6 +38,8 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
 
@@ -103,8 +107,23 @@ public class SaveStructureExecutor implements CommandExecutor {
 
         final String authorUUID = args.<String>getOne("authorUUID").orElse(playerUUID.toString());
 
+        Set<String> modIds = new HashSet<>();
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    BlockState block = player.getWorld().getBlock(x, y, z);
+                    String blockId = block.getId();
+                    String modId = blockId.substring(0, blockId.indexOf(':'));
+                    if (!modId.equalsIgnoreCase("minecraft")) {
+                        modIds.add(modId);
+                    }
+                }
+            }
+        }
+
         Schematic schematic = Schematic.builder().volume(volume).metaValue(Schematic.METADATA_AUTHOR, authorUUID)
                 .metaValue(Schematic.METADATA_NAME, structureName).metaValue("Direction", direction.toString())
+                .metaValue(Schematic.METADATA_REQUIRED_MODS, Lists.newArrayList(modIds))
                 .paletteType(BlockPaletteTypes.LOCAL).build();
 
         player.sendMessage(Text.of(TextColors.GREEN, "Uploading the structure..."));
